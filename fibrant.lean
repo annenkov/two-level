@@ -20,10 +20,13 @@ constant sigma_is_fibrant' {X : Type}{Y : X → Type}
   → (Π (x : X), is_fibrant (Y x))
   → is_fibrant' (Σ (x : X), Y x)
 
+constant prod_is_fibrant' {X Y : Type}
+  : is_fibrant X -> is_fibrant Y -> is_fibrant' (X × Y)
+
 constant fib_eq {X : Type}[is_fibrant X] : X → X → Type
-notation x ~ y := fib_eq x y
 
 namespace fib_eq
+  notation x ~ y := fib_eq x y
   constant refl {X : Type}[is_fibrant X](x : X) : x ~ x
   constant elim {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
                 [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
@@ -31,6 +34,7 @@ namespace fib_eq
   constant elim_β {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
                 [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
                 (d : P x (refl x)) : elim d x (refl x) ~ d
+  definition idp [reducible] [constructor] {X : Type}[is_fibrant X] {a : X} := refl a
 end fib_eq
 
 constant fib_eq_is_fibrant' {X : Type}[is_fibrant X](x y : X) : is_fibrant' (fib_eq x y)
@@ -58,6 +62,10 @@ definition sigma_is_fibrant [instance] {X : Type}{Y : X → Type}
   is_fibrant (Σ (x : X), Y x) :=
     is_fibrant.mk (sigma_is_fibrant' fibX fibY)
 
+definition prod_is_fibrant [instance] {X Y : Type} 
+  [fibX : is_fibrant X] [fibY : is_fibrant Y] :
+  is_fibrant (X × Y) := is_fibrant.mk (prod_is_fibrant' fibX fibY)
+
 definition fib_is_fibrant [instance] : is_fibrant Fib := is_fibrant.mk fib_is_fibrant'
 
 definition fib_eq_is_fibrant [instance] {X : Type}[is_fibrant X](x y : X) :
@@ -66,8 +74,12 @@ definition fib_eq_is_fibrant [instance] {X : Type}[is_fibrant X](x y : X) :
 
 -- basics
 
+open prod
+
 namespace fib_eq
-  variables {X : Type}[is_fibrant X]
+  variables {X: Type}[is_fibrant X]
+  variables {Y: Type}[is_fibrant Y]
+  variables {Z: Type}[is_fibrant Z]
 
   attribute refl [refl]
   definition symm [symm] {x y : X} : x ~ y → y ~ x :=
@@ -76,14 +88,30 @@ namespace fib_eq
     elim_β (refl x)
   definition trans [trans] {x y z : X} : x ~ y → y ~ z → x ~ z := λ p,
     elim p z
+  
   definition trans_β {x y : X}(p : x ~ y) : trans p (refl y) ~ p :=
     elim_β p
+
+  definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z := 
+  (elim (elim idp z) y) p q  
+  
+  -- Alternative proof of transitivity using tactics.
+  -- FIXME: check why it fails if we do induction of p only (probably, has something to do with levels)
+  definition trans'' [trans] {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
+  -- by induction p using elim; exact q -- fails if we do induction on p only
+  by induction p using elim; induction q using elim; apply idp  -- but works in case of double induction  
+
   definition subst [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
                            (p : x ~ y)(d : P x) : P y :=
     elim d y p
   definition subst_β {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
                      subst (refl x) d ~ d :=
     elim_β d
+  
+  -- FIXME: simplification/rewriting needed to define beta rules
+  eval trans' (refl _) (refl _) ~ refl _
+  definition trans_β' {x : X} : trans' (refl x) (refl x) ~ (refl x) := sorry
+  
 
   infixl ⬝ := trans
 
@@ -93,9 +121,34 @@ namespace fib_eq
         ~ (refl x ⬝ refl x) : { !symm_β }
     ... ~ refl x : trans_β in
     elim t y p
+  
+  -- actions on paths
+
+  definition ap {x y : X}  (f : X -> Y) : x ~ y -> f x ~ f y :=
+    elim (refl _) _
+  
+  definition ap_β {x : X} (f : X -> Y) : ap f (refl x) ~ refl (f x) := elim_β (refl (f x))
+
+  definition ap₂ {x x' : X} {y y' : Y} (f : X -> Y -> Z) (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' :=
+    (ap (λ x, f x y) p) ⬝ (ap (f x') q)
+  
+  variables {xx : X} {yy : Y}
+  variables {ff : X -> Y -> Z}
+  
+  eval ap₂ ff (refl _) (refl _)
+  check (elim (refl (ff xx yy)) xx)
+  definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) ~ refl (f x y) := sorry
+
+  -- definition apd {x y : X} (p : x = y)
+  
 end fib_eq
 
 open fib_eq
+
+variables {A: Type}[is_fibrant A]
+variables {B: Type}[is_fibrant B]
+variables {C: Type}[is_fibrant C]
+
 
 structure is_contr (X : Type)[is_fibrant X] := mk ::
   (center : X)
