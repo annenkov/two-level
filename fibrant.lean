@@ -35,9 +35,6 @@ namespace fib_eq
                 (d : P x (refl x)) : Π (y : X)(p : x ~ y), P y p
   constant elim_β {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
                 [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
-                (d : P x (refl x)) : elim d x (refl x) ~ d
-  constant elim_β_s {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
-                [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
                 (d : P x (refl x)) : elim d x (refl x) = d
   definition idp [reducible] [constructor] {X : Type}[is_fibrant X] {a : X} := refl a
 end fib_eq
@@ -89,12 +86,12 @@ namespace fib_eq
   attribute refl [refl]
   definition symm [symm] {x y : X} : x ~ y → y ~ x :=
     elim (refl x) y
-  definition symm_β {x : X} : symm (refl x) ~ refl x :=
+  definition symm_β {x : X} : symm (refl x) = refl x :=
     elim_β (refl x)
   definition trans [trans] {x y z : X} : x ~ y → y ~ z → x ~ z := λ p,
     elim p z
   
-  definition trans_β {x y : X}(p : x ~ y) : trans p (refl y) ~ p :=
+  definition trans_β {x y : X}(p : x ~ y) : trans p (refl y) = p :=
     elim_β p
 
   definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z := 
@@ -109,43 +106,38 @@ namespace fib_eq
                            (p : x ~ y)(d : P x) : P y :=
     elim d y p
   definition subst_β {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
-                     subst (refl x) d ~ d :=
+                     subst (refl x) d = d :=
     elim_β d
   
-  -- FIXME: simplification/rewriting needed to define beta rules
-  eval trans' (refl _) (refl _) ~ refl _
-
   definition trans_β' {x : X} : trans' (refl x) (refl x) = (refl x) := 
   begin
-    unfold trans' , rewrite elim_β_s , rewrite elim_β_s 
+    unfold trans' , repeat rewrite elim_β
   end
   
 
   infixl ⬝ := trans
 
   definition symm_trans {x y : X}(p : x ~ y) : symm p ⬝ p ~ refl y :=
-    let t := calc
-         (symm (refl x) ⬝ refl x)
-        ~ (refl x ⬝ refl x) : { !symm_β }
-    ... ~ refl x : trans_β in
-    elim t y p
+  begin induction p using elim, rewrite symm_β, rewrite trans_β end
+    
+--    let t := calc
+--         (symm (refl x) ⬝ refl x)
+--        ~ (refl x ⬝ refl x) : { !symm_β }
+--    ...  refl x : trans_β in
+--    elim t y p
   
   -- actions on paths
 
   definition ap {x y : X}  (f : X -> Y) : x ~ y -> f x ~ f y :=
     elim (refl _) _
   
-  definition ap_β {x : X} (f : X -> Y) : ap f (refl x) ~ refl (f x) := elim_β (refl (f x))
+  definition ap_β {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
 
   definition ap₂ {x x' : X} {y y' : Y} (f : X -> Y -> Z) (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' :=
     (ap (λ x, f x y) p) ⬝ (ap (f x') q)
-  
-  variables {xx : X} {yy : Y}
-  variables {ff : X -> Y -> Z}
-  
-  eval ap₂ ff (refl _) (refl _)
-  check (elim (refl (ff xx yy)) xx)
-  definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) ~ refl (f x y) := sorry
+    
+  definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) := 
+  begin unfold ap₂, repeat rewrite ap_β, apply trans_β  end
 
   -- definition apd {x y : X} (p : x = y)
   
@@ -225,9 +217,12 @@ notation X `≃` Y := fib_equiv X Y
 
 definition coerce {X Y : Fib} : X ~ Y → X → Y := elim id Y
 definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X ~ Y) : is_fib_equiv (coerce p) :=
-  have coerce (refl X) ~ id, from elim_β id,
-  have is_fib_equiv (coerce (refl X)), from subst (symm this) id_is_fib_equiv,
-  elim this Y p
+  begin 
+    induction p using elim, 
+    unfold coerce, rewrite elim_β, 
+    apply id_is_fib_equiv  
+end
+
 definition coerce_fib_equiv {X Y : Fib}(p : X ~ Y) : X ≃ Y := ⟨ coerce p, _ ⟩
 
 definition Univalence := Π {X Y : Fib}, is_fib_equiv (@coerce_fib_equiv X Y)
