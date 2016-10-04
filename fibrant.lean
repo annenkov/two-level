@@ -36,6 +36,9 @@ namespace fib_eq
   constant elim_β {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
                 [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
                 (d : P x (refl x)) : elim d x (refl x) ~ d
+  constant elim_β_s {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
+                [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
+                (d : P x (refl x)) : elim d x (refl x) = d
   definition idp [reducible] [constructor] {X : Type}[is_fibrant X] {a : X} := refl a
 end fib_eq
 
@@ -111,7 +114,11 @@ namespace fib_eq
   
   -- FIXME: simplification/rewriting needed to define beta rules
   eval trans' (refl _) (refl _) ~ refl _
-  definition trans_β' {x : X} : trans' (refl x) (refl x) ~ (refl x) := sorry
+
+  definition trans_β' {x : X} : trans' (refl x) (refl x) = (refl x) := 
+  begin
+    unfold trans' , rewrite elim_β_s , rewrite elim_β_s 
+  end
   
 
   infixl ⬝ := trans
