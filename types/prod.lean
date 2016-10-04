@@ -3,13 +3,12 @@ import ..fibrant
 open prod prod.ops
 open fib_eq
 
+-- TODO: think about the namespace name
 namespace hprod 
 
   variables {A: Type} [is_fibrant A]
   variables {B: Type} [is_fibrant B]
   variables {u v w : A × B} {a a' : A} {b b' : B}
-
-  set_option formatter.hide_full_terms false
 
   protected definition eta [unfold 3] (u : A × B) : (pr₁ u, pr₂ u) ~ u :=
   by cases u; apply idp
@@ -19,10 +18,9 @@ namespace hprod
 
   definition pair_eq' (pa : a ~ a') (pb : b ~ b') : (a, b) ~ (a', b') :=
   ap₂ (λ x y, (x,y)) pa pb
-
-  -- FIXME: proof with tactics gives an error "value has metavariables"
-  -- definition prod_eq' (H₁ : u.1 ~ v.1) (H₂ : u.2 ~ v.2) : u ~ v :=
-  -- by cases u; cases v; exact pair_eq' H₁ H₂
+  
+  definition prod_eq' (H₁ : u.1 ~ v.1) (H₂ : u.2 ~ v.2) : u ~ v :=
+  by cases u; cases v; exact pair_eq' H₁ H₂
 
   definition prod_eq (p : pr₁ u ~ pr₁ v) (q : pr₂ u ~ pr₂ v) : u ~ v :=
   (prod.cases_on u (λ x y, prod.cases_on v (λ x1 y1, pair_eq'))) p q

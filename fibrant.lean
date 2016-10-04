@@ -23,7 +23,9 @@ constant sigma_is_fibrant' {X : Type}{Y : X → Type}
 constant prod_is_fibrant' {X Y : Type}
   : is_fibrant X -> is_fibrant Y -> is_fibrant' (X × Y)
 
-constant fib_eq {X : Type}[is_fibrant X] : X → X → Type
+-- explicit universe level declaration allows to use tactics;
+-- otherwise, proofs fail to unify level variables sometime
+constant fib_eq.{u} {X : Type.{u}}[is_fibrant X] : X → X → Type.{u}
 
 namespace fib_eq
   notation x ~ y := fib_eq x y
@@ -93,13 +95,12 @@ namespace fib_eq
     elim_β p
 
   definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z := 
-  (elim (elim idp z) y) p q  
-  
-  -- Alternative proof of transitivity using tactics.
-  -- FIXME: check why it fails if we do induction of p only (probably, has something to do with levels)
-  definition trans'' [trans] {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
-  -- by induction p using elim; exact q -- fails if we do induction on p only
-  by induction p using elim; induction q using elim; apply idp  -- but works in case of double induction  
+  (elim (elim idp z) y) p q
+
+  -- Alternative proof of transitivity using tactics.  
+  definition trans'' {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
+  by induction p using elim; exact q
+  --by induction p using elim; induction q using elim; apply idp -- double induction with tactics
 
   definition subst [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
                            (p : x ~ y)(d : P x) : P y :=
