@@ -1,6 +1,6 @@
 import ..fibrant
 
-open prod.ops
+open prod prod.ops
 open fib_eq
 
 namespace hprod 
