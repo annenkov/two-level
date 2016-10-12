@@ -1,6 +1,6 @@
 import fibrant data.fin data.equiv
 
-open nat equiv function fin
+open nat equiv function fin eq.ops
 
 definition pi_is_fibrant'' {X : Type}{Y : X → Type}
 (fibX : is_fibrant X) (fibY : Π (x : X), is_fibrant (Y x)) :
@@ -63,20 +63,36 @@ begin apply equiv.right_inv end
 
 set_option formatter.hide_full_terms false
 
-lemma pi_congruence {A B : Type} [HequivAB : A ≃ B] {X : A → Type}
-                    : (Π (i : A), X i) ≃ (Π (i : B), X (equiv.inv i)) := 
-      equiv.mk (λ x y, x _) 
-               (begin 
-                 intros, 
-                 have H : X (inv (equiv.fn HequivAB i)), from (a (equiv.fn HequivAB i)), 
-                 have H1 : X i, from eq.rec_on (@equiv_id_left A B HequivAB i) H,
-                 exact H1
-                 end) sorry sorry
-               --(begin unfold left_inverse, intros, apply funext, intros, apply equiv_id, end) 
-               --(begin unfold right_inverse, unfold left_inverse, intros, apply funext, intros, apply equiv_id end)
+check eq.rec
 
-definition pi_congruence' {A B : Type} [equiv : A ≃ B] {X : B → Type} : 
-                     (Π (i : A), X (equiv.fn _ i)) ≃ (Π (i : B), X i) := 
+definition ap {A B : Type}(f : A → B){a a' : A}
+              (p : a = a') : f a = f a' := p ▹ eq.refl _
+
+definition apd {A : Type}{B : A → Type}(f : Π (a : A), B a)
+               {a a' : A}(p : a = a') : p ▹ f a = f a' :=
+  eq.drec (eq.refl _) p
+
+definition naturality_subst {X Y : Type}{x x' : X}{P : Y → Type}
+                            (f : X → Y)(p : x = x')(u : P (f x)) :
+                            ap f p ▹ u = p ▹ u :=
+  eq.drec (eq.refl _) p
+
+definition pi_congr {A A' : Type}{B : A' → Type} (φ : equiv A A')
+                       : (Π (a : A), B (φ ∙ a)) ≃ (Π (a : A'), B a) :=
+  match φ with mk f g l r :=
+  mk (λ k x', r x' ▹ k (g x'))
+     (λ h x, h (f x))
+     (λ k, funext (λ x,
+       calc  r (f x) ▹ k (g (f x))
+           = ap f (l x) ▹ k (g (f x)) : { proof_irrel (r (f x)) (ap f (l x)) }
+       ... = l x ▹ k (g (f x)) : naturality_subst f (l x) (k (g (f x)))
+       ... = k x : apd k (l x)
+       ))
+     (λ h, funext (λ x', apd h (r x')))
+  end
+
+definition pi_congruence' {A B : Type} [equiv : A ≃ B] {X : B → Type} :
+                     (Π (i : A), X (equiv.fn _ i)) ≃ (Π (i : B), X i) :=
       equiv.mk (begin intros Hpi i,
                 have H : X i, from eq.rec_on (@equiv_id_right A B equiv i) (Hpi (equiv.inv i)),
                 exact H
