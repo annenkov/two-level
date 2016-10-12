@@ -63,8 +63,6 @@ begin apply equiv.right_inv end
 
 set_option formatter.hide_full_terms false
 
-check eq.rec
-
 definition ap {A B : Type}(f : A → B){a a' : A}
               (p : a = a') : f a = f a' := p ▹ eq.refl _
 
@@ -77,7 +75,7 @@ definition naturality_subst {X Y : Type}{x x' : X}{P : Y → Type}
                             ap f p ▹ u = p ▹ u :=
   eq.drec (eq.refl _) p
 
-definition pi_congruence' {A A' : Type} [φ : equiv A A'] {B : A' → Type}
+definition pi_congr {A A' : Type} [φ : equiv A A'] {B : A' → Type}
                        : (Π (a : A), B (φ ∙ a)) ≃ (Π (a : A'), B a) :=
   match φ with mk f g l r :=
   mk (λ k x', r x' ▹ k (g x'))
@@ -104,7 +102,7 @@ begin
   apply equiv_is_fibrant, apply (equiv.symm pi_fin0_unit_equiv),
 
   have HeqFinSum : fin (succ a) ≃ fin a + unit, from (equiv.symm (fin_sum_unit_equiv a)),
-  apply equiv_is_fibrant, apply (@pi_congruence' _ _ HeqFinSum⁻¹ _),  apply equiv_is_fibrant, apply equiv.symm,
+  apply equiv_is_fibrant, apply (@pi_congr _ _ HeqFinSum⁻¹ _),  apply equiv_is_fibrant, apply equiv.symm,
   apply (@pi_sum_fin_unit_equiv' a (equiv.symm HeqFinSum) X), apply (@prod_is_fibrant'' _ _), apply fibX, apply v_0,
   intro, apply fibX
 end
