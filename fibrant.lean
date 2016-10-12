@@ -137,9 +137,12 @@ namespace fib_eq
     (ap (λ x, f x y) p) ⬝ (ap (f x') q)
     
   definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) := 
-  begin unfold ap₂, repeat rewrite ap_β, apply trans_β  end
-
+  begin unfold ap₂, repeat rewrite ap_β, apply trans_β end
+  
   -- definition apd {x y : X} (p : x = y)
+
+  definition strict_eq_fib_eq { x y : X} : x = y -> x ~ y :=
+  eq.rec (refl _)
   
 end fib_eq
 
