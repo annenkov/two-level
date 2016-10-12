@@ -77,7 +77,7 @@ definition naturality_subst {X Y : Type}{x x' : X}{P : Y → Type}
                             ap f p ▹ u = p ▹ u :=
   eq.drec (eq.refl _) p
 
-definition pi_congr {A A' : Type}{B : A' → Type} (φ : equiv A A')
+definition pi_congruence' {A A' : Type} [φ : equiv A A'] {B : A' → Type}
                        : (Π (a : A), B (φ ∙ a)) ≃ (Π (a : A'), B a) :=
   match φ with mk f g l r :=
   mk (λ k x', r x' ▹ k (g x'))
@@ -91,29 +91,18 @@ definition pi_congr {A A' : Type}{B : A' → Type} (φ : equiv A A')
      (λ h, funext (λ x', apd h (r x')))
   end
 
-definition pi_congruence' {A B : Type} [equiv : A ≃ B] {X : B → Type} :
-                     (Π (i : A), X (equiv.fn _ i)) ≃ (Π (i : B), X i) :=
-      equiv.mk (begin intros Hpi i,
-                have H : X i, from eq.rec_on (@equiv_id_right A B equiv i) (Hpi (equiv.inv i)),
-                exact H
-                end)
-      (λ x i, x (equiv.fn _ i))
-      sorry sorry
---(begin unfold left_inverse, intros, apply funext, intros, apply equiv_id, end) 
---(begin unfold right_inverse, unfold left_inverse, intros, apply funext, intros, apply equiv_id end)
-
-definition prod_is_fibrant'' [instance] {X Y : Type} 
+definition prod_is_fibrant'' [instance] {X Y : Type}
 {fibX : is_fibrant X} {fibY : is_fibrant Y} :
 is_fibrant (X × Y) := is_fibrant.mk (prod_is_fibrant' fibX fibY)
 
 definition lemma3 {n : ℕ}
                   {X : fin n → Type}
                   {fibX : Π i, is_fibrant (X i)}
-  : is_fibrant (Π i, X i) := 
+  : is_fibrant (Π i, X i) :=
 begin
-  induction n,  
+  induction n,
   apply equiv_is_fibrant, apply (equiv.symm pi_fin0_unit_equiv),
-  
+
   have HeqFinSum : fin (succ a) ≃ fin a + unit, from (equiv.symm (fin_sum_unit_equiv a)),
   apply equiv_is_fibrant, apply (@pi_congruence' _ _ HeqFinSum⁻¹ _),  apply equiv_is_fibrant, apply equiv.symm,
   apply (@pi_sum_fin_unit_equiv' a (equiv.symm HeqFinSum) X), apply (@prod_is_fibrant'' _ _), apply fibX, apply v_0,
