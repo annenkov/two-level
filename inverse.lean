@@ -1,5 +1,6 @@
 -- inverse categories
 import algebra.category
+import algebra.category.constructions
 import open nat
 
 open nat.le functor
@@ -31,21 +32,10 @@ end invcat
 open invcat
 open unit
 
-definition trivial_cat [instance] : category unit :=
-  ⦃ category,
-    hom := λ a b, unit,
-    comp := (λ a b c q p, ⋆),
-    ID := id,
-    assoc := λ a b c p q h g, eq.refl _,
-    id_left := (λ a b f, unit.rec_on f (eq.refl _)),
-    id_right :=(λ a b f, unit.rec_on f (eq.refl _))⦄
-
-definition TrivCat := Mk trivial_cat
-
-definition triv_funct : TrivCat ⇒ ℕop :=
+definition triv_funct : Category_one ⇒ ℕop :=
   functor.mk (λ (x : unit), zero) (λ a b p, id) (λa, eq.refl _) (λa b c p q, eq.refl _)
 
-definition triv_funct_id_reflect [instance] : has_idreflect TrivCat ℕop :=
+definition triv_funct_id_reflect [instance] : has_idreflect Category_one ℕop :=
   has_idreflect.mk
     triv_funct
     begin
@@ -54,4 +44,4 @@ definition triv_funct_id_reflect [instance] : has_idreflect TrivCat ℕop :=
       existsi (eq.refl _), reflexivity
     end
 
-definition triv_cat_inverse [instance] : invcat TrivCat := invcat.mk _
+definition triv_cat_inverse [instance] : invcat Category_one := invcat.mk _
