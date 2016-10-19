@@ -2,14 +2,14 @@ import algebra.category
 
 open category natural_transformation
 
-definition Δ {J C : Category} (c : C) : J ⇒ C :=
+definition const_funct {J C : Category} (c : C) : J ⇒ C :=
   ⦃ functor,
     object := λ i, c,
     morphism := λ i j g, id,
     respect_id := λ i, eq.refl _,
     respect_comp := λi j k f g, by rewrite id_left ⦄
 
-definition cone {J C : Category} (D : J ⇒ C) := Σ c, Δ c ⟹ D
+definition cone {J C : Category} (D : J ⇒ C) := Σ c, const_funct c ⟹ D
 
 open sigma.ops
 
