@@ -1,2 +1,6 @@
 *.clean
 *.olean
+*.d
+*.ilean
+*.ninja*
+build.ninja

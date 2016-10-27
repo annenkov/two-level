@@ -1,0 +1,10 @@
+# Lean project file
+
+# Include all .lean files under this directory
++ *.lean
+
+# Exclude flycheck generated temp files
+- flycheck*.lean
+
+# Exclude emacs temp files
+- .#*.lean
