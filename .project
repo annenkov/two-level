@@ -2,7 +2,6 @@
 
 # Include all .lean files under this directory
 + *.lean
-+ types/*.lean
 
 # Exclude flycheck generated temp files
 - flycheck*.lean
