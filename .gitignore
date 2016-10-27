@@ -1,2 +1,7 @@
 *.clean
 *.olean
+*.d
+*.ilean
+.ninja_log
+.ninja_deps
+build.ninja
