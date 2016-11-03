@@ -11,7 +11,7 @@ namespace reduced_coslice
   open coslice_obs
 
   structure red_coslice_obs {A : Type} (C : category A) (c : A) extends coslice_obs C c :=   
-  (rc_non_id_hom : Σ (p : c = to), not (p ▹ hom_to = category.id))
+  (rc_non_id_hom : Π (p : c = to), not (p ▹ hom_to = category.id))
 
 
   -- taken from commented out code in std library and modified
