@@ -1,12 +1,13 @@
 import data.equiv
-open equiv
+--open equiv
 
+notation X `≃ₛ` Y := equiv X Y
 constant is_fibrant' : Type → Prop
 
 structure is_fibrant [class] (X : Type) := mk ::
   fib_internal : is_fibrant' X
 
-constant equiv_is_fibrant {X Y : Type}(e : X ≃ Y)[fib : is_fibrant X] : is_fibrant Y
+constant equiv_is_fibrant {X Y : Type}(e : X ≃ₛ Y)[fib : is_fibrant X] : is_fibrant Y
 
 constant unit_is_fibrant' : is_fibrant' unit
 
@@ -158,7 +159,7 @@ structure is_contr (X : Type)[is_fibrant X] := mk ::
   (contraction : Π (x : X), center ~ x)
 
 definition is_contr_equiv [instance] {X : Type}[is_fibrant X] :
-  (Σ (c : X), Π (x : X), c ~ x) ≃ is_contr X := sorry
+  (Σ (c : X), Π (x : X), c ~ x) ≃ₛ is_contr X := sorry
 
 definition is_contr_is_fibrant [instance] (X : Type)[is_fibrant X] : is_fibrant (is_contr X) :=
   equiv_is_fibrant is_contr_equiv
@@ -209,23 +210,38 @@ section fib_equivalences
 
   definition fibre [reducible] (y : Y) := Σ (x : X), f x ~ y
   definition is_fib_equiv [reducible] [class] := Π (y : Y), is_contr (fibre f y)
+
+  definition fib_equiv [reducible] (X Y : Type)[is_fibrant X][is_fibrant Y] : Type :=
+    Σ (f : X → Y), is_fib_equiv f
+
+  definition id_is_fib_equiv {X : Type}[is_fibrant X] : is_fib_equiv (@id X) := singleton_contr
+
+  notation X `≃` Y := fib_equiv X Y
+
+  definition coerce {X Y : Fib} : X ~ Y → X → Y := elim id Y
+  definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X ~ Y) : is_fib_equiv (coerce p) :=
+    begin 
+      induction p using elim, 
+      unfold coerce, rewrite elim_β, 
+      apply id_is_fib_equiv  
+    end
+
+  definition coerce_fib_equiv {X Y : Fib}(p : X ~ Y) : X ≃ Y := ⟨ coerce p, _ ⟩
+
 end fib_equivalences
 
-definition fib_equiv [reducible] (X Y : Type)[is_fibrant X][is_fibrant Y] : Type :=
-  Σ (f : X → Y), is_fib_equiv f
-
-definition id_is_fib_equiv {X : Type}[is_fibrant X] : is_fib_equiv (@id X) := singleton_contr
-
-notation X `≃` Y := fib_equiv X Y
-
-definition coerce {X Y : Fib} : X ~ Y → X → Y := elim id Y
-definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X ~ Y) : is_fib_equiv (coerce p) :=
-  begin 
-    induction p using elim, 
-    unfold coerce, rewrite elim_β, 
-    apply id_is_fib_equiv  
-end
-
-definition coerce_fib_equiv {X Y : Fib}(p : X ~ Y) : X ≃ Y := ⟨ coerce p, _ ⟩
 
 definition Univalence := Π {X Y : Fib}, is_fib_equiv (@coerce_fib_equiv X Y)
+
+
+definition fibreₛ {X Y : Type} (f : X → Y) (y : Y) := Σ (x : X), f x = y
+
+definition is_fibration {E B : Type} (p : E → B) := Σ (F : B → Fib), Π (b : B), F b ≃ₛ (fibreₛ p b)
+
+definition is_fibration_alt {E B : Type} (p : E → B) := Π (b : B), is_fibrant (fibreₛ p b)
+
+check is_fibrant'
+
+
+
+
