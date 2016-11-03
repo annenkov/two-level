@@ -17,9 +17,13 @@ definition nat_cat_op [instance] : category ℕ :=
 
 definition ℕop := Mk nat_cat_op
 
+
 namespace invcat
   -- have to pack functor with the property that it reflects identities,
   -- because functor itself is not a type class
+  -- CAVEAT: this is not really "identity reflection" (because we don't 
+  -- require φ(f) to be an identity.), but for ℕop, this will be automatic.
+  -- Maybe rename the property? 
   structure has_idreflect [class] (C D : Category) :=
     (φ : C ⇒ D)
     (id_reflect : Π ⦃x y : C⦄ (f : x ⟶ y), φ x = φ y → (Σ (p : x = y), p ▹ f = id))
