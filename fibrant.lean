@@ -42,7 +42,7 @@ end fib_eq
 
 constant fib_eq_is_fibrant' {X : Type}[is_fibrant X](x y : X) : is_fibrant' (fib_eq x y)
 
-structure Fib := mk ::
+structure Fib : Type := mk ::
   (pretype : Type)
   (fib : is_fibrant pretype)
 
@@ -236,11 +236,35 @@ definition Univalence := Π {X Y : Fib}, is_fib_equiv (@coerce_fib_equiv X Y)
 
 definition fibreₛ {X Y : Type} (f : X → Y) (y : Y) := Σ (x : X), f x = y
 
-definition is_fibration {E B : Type} (p : E → B) := Σ (F : B → Fib), Π (b : B), F b ≃ₛ (fibreₛ p b)
+definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) := Σ (F : B → Fib.{u}), Π (b : B), F b ≃ₛ (fibreₛ p b)
 
 definition is_fibration_alt {E B : Type} (p : E → B) := Π (b : B), is_fibrant (fibreₛ p b)
 
-check is_fibrant'
+
+
+-- I am just doing some experiments here. Should probably be improved. (Nicolai)
+-- does ↔ exist for Type?
+definition two_fibrations {E B : Type} {p : E → B} : 
+  (is_fibration p → is_fibration_alt p) × (is_fibration_alt p → is_fibration p) :=
+  begin
+    intros,
+    split,
+
+    intro ifp,
+    intros,
+    cases ifp with [F , fe],
+    apply equiv_is_fibrant,
+    exact (fe b),
+
+    intro ifaltp,
+    have F : B → Fib, from λ b, Fib.mk (fibreₛ p b) (ifaltp b),
+    existsi (λ b, Fib.mk (fibreₛ p b) (ifaltp b)),
+    intro b,
+    apply (equiv.refl),
+  end
+
+
+
 
 
 
