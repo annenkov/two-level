@@ -65,7 +65,7 @@ definition sigma_is_fibrant [instance] {X : Type}{Y : X → Type}
   is_fibrant (Σ (x : X), Y x) :=
     is_fibrant.mk (sigma_is_fibrant' fibX fibY)
 
-definition prod_is_fibrant [instance] {X Y : Type} 
+definition prod_is_fibrant [instance] {X Y : Type}
   [fibX : is_fibrant X] [fibY : is_fibrant Y] :
   is_fibrant (X × Y) := is_fibrant.mk (prod_is_fibrant' fibX fibY)
 
@@ -91,14 +91,14 @@ namespace fib_eq
     elim_β (refl x)
   definition trans [trans] {x y z : X} : x ~ y → y ~ z → x ~ z := λ p,
     elim p z
-  
+
   definition trans_β {x y : X}(p : x ~ y) : trans p (refl y) = p :=
     elim_β p
 
-  definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z := 
+  definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z :=
   (elim (elim idp z) y) p q
 
-  -- Alternative proof of transitivity using tactics.  
+  -- Alternative proof of transitivity using tactics.
   definition trans'' {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
   by induction p using elim; exact q
   --by induction p using elim; induction q using elim; apply idp -- double induction with tactics
@@ -109,42 +109,42 @@ namespace fib_eq
   definition subst_β {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
                      subst (refl x) d = d :=
     elim_β d
-  
-  definition trans_β' {x : X} : trans' (refl x) (refl x) = (refl x) := 
+
+  definition trans_β' {x : X} : trans' (refl x) (refl x) = (refl x) :=
   begin
     unfold trans' , repeat rewrite elim_β
   end
-  
+
 
   infixl ⬝ := trans
 
   definition symm_trans {x y : X}(p : x ~ y) : symm p ⬝ p ~ refl y :=
   begin induction p using elim, rewrite symm_β, rewrite trans_β end
-    
+
 --    let t := calc
 --         (symm (refl x) ⬝ refl x)
 --        ~ (refl x ⬝ refl x) : { !symm_β }
 --    ...  refl x : trans_β in
 --    elim t y p
-  
+
   -- actions on paths
 
   definition ap {x y : X}  (f : X -> Y) : x ~ y -> f x ~ f y :=
     elim (refl _) _
-  
+
   definition ap_β {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
 
   definition ap₂ {x x' : X} {y y' : Y} (f : X -> Y -> Z) (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' :=
     (ap (λ x, f x y) p) ⬝ (ap (f x') q)
-    
-  definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) := 
+
+  definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) :=
   begin unfold ap₂, repeat rewrite ap_β, apply trans_β end
-  
+
   -- definition apd {x y : X} (p : x = y)
 
   definition strict_eq_fib_eq { x y : X} : x = y -> x ~ y :=
   eq.rec (refl _)
-  
+
 end fib_eq
 
 open fib_eq
@@ -220,10 +220,10 @@ section fib_equivalences
 
   definition coerce {X Y : Fib} : X ~ Y → X → Y := elim id Y
   definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X ~ Y) : is_fib_equiv (coerce p) :=
-    begin 
-      induction p using elim, 
-      unfold coerce, rewrite elim_β, 
-      apply id_is_fib_equiv  
+    begin
+      induction p using elim,
+      unfold coerce, rewrite elim_β,
+      apply id_is_fib_equiv
     end
 
   definition coerce_fib_equiv {X Y : Fib}(p : X ~ Y) : X ≃ Y := ⟨ coerce p, _ ⟩
@@ -244,7 +244,7 @@ definition is_fibration_alt {E B : Type} (p : E → B) := Π (b : B), is_fibrant
 
 -- I am just doing some experiments here. Should probably be improved. (Nicolai)
 -- does ↔ exist for Type?
-definition two_fibrations {E B : Type} {p : E → B} : 
+definition two_fibrations {E B : Type} {p : E → B} :
   (is_fibration p → is_fibration_alt p) × (is_fibration_alt p → is_fibration p) :=
   begin
     intros,
@@ -262,10 +262,3 @@ definition two_fibrations {E B : Type} {p : E → B} :
     intro b,
     apply (equiv.refl),
   end
-
-
-
-
-
-
-
