@@ -1,15 +1,16 @@
 import algebra.category
 
-open category natural_transformation sigma.ops
+open natural_transformation sigma.ops
+open category --  (hiding comp)
 
-definition const_funct (J C : Category) (c : C) : J ⇒ C :=
+definition const_funct [reducible] (J C : Category) (c : C) : J ⇒ C :=
   ⦃ functor,
     object := λ i, c,
     morphism := λ i j g, id,
     respect_id := λ i, eq.refl _,
     respect_comp := λi j k f g, by rewrite id_left ⦄
 
-definition cone {J C : Category} (D : J ⇒ C) := Σ c, const_funct _ _ c ⟹ D
+definition cone [reducible] {J C : Category} (D : J ⇒ C) := Σ c, const_funct _ _ c ⟹ D
 
 structure cone_hom {J C : Category} {D : J ⇒ C} (c : cone D ) (c' : cone D) : Type :=
   (chom : c.1 ⟶ c'.1)
@@ -86,11 +87,32 @@ variables {C : Category.{1 1}}
 variable D : C ⇒ Type_category
 variable z : C
 
-check (functor.object D z)
+
+open functor unit
+
+set_option unifier.max_steps 500000000
+
+definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
+⟨ (const_funct _ _ unit) ⟹ D ,
+  natural_transformation.mk
+    (λ a L, natural_map L a ⋆)
+    (λ a b f, funext (λ (L : (const_funct _ _ unit) ⟹ D),
+      calc
+        (@category.comp _ _ _ _ _ (morphism D f) (λ L', natural_map L' a ⋆)) L
+            = morphism D f (natural_map L a ⋆) : rfl
+        ... = natural_map L b ⋆ : sorry
+        ... = sorry : sorry -- function.comp (natural_map L b ⋆) id : sorry
+        ... = (@category.comp _ _ _ _ _ (λ L', natural_map L' b ⋆) id) L : sorry
+    )) 
+⟩
 
 
--- definition cone_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : cone D :=
--- ⟨ unit, natural_transformation.mk (λ x, begin unfold const_funct, intros, apply (functor.object D x),   end) _⟩
+-- definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : limit D :=
+--   ⦃ has_terminal_obj _,
+--     terminal := cone_in_pretype D,
+--     is_terminal_obj := sorry ⦄  
+
+
 
 -- definition is_terminal_const_to_unit {C : Category} {D : C ⇒ Type_category} (C : ConeCat D) : is_terminal D :=
 
