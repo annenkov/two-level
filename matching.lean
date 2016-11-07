@@ -70,6 +70,6 @@ open functor
 
 namespace matching_object
   
-definition matching_object (C : Category) [invcat C] (X : C ⇒ FibCat) := 
-  Π z, limit (X ∘f (forget C z))
+definition matching_object {C : Category} [invcat C] (X : C ⇒ FibCat) (z : C):=
+  limit (X ∘f (forget C z))
 end matching_object
