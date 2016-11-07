@@ -78,14 +78,25 @@ definition c2_functor (C : Category) (A B : C) : CatTwo ⇒ C :=
 
 definition product {C : Category} (A B : C) := limit (c2_functor _ A B)
 
+-- Type_category limits
 
-check Type_category
+--set_option pp.universes true
+
+variables {C : Category.{1 1}}
+variable D : C ⇒ Type_category
+variable z : C
+
+check (functor.object D z)
 
 
+-- definition cone_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : cone D :=
+-- ⟨ unit, natural_transformation.mk (λ x, begin unfold const_funct, intros, apply (functor.object D x),   end) _⟩
+
+-- definition is_terminal_const_to_unit {C : Category} {D : C ⇒ Type_category} (C : ConeCat D) : is_terminal D :=
 
 
-
-
-
-
-
+-- definition type_limit {C : Category} {F : C ⇒ Type_category} : limit F:=
+-- ⦃ has_terminal_obj, 
+--   terminal := _,
+--   is_terminal_obj := _
+--   ⦄
