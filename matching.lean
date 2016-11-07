@@ -51,25 +51,25 @@ namespace reduced_coslice
 end reduced_coslice
 
 open reduced_coslice
-open invcat Fib
+open invcat --Fib
 
--- TODO: definition is exactly the same as for type_category
--- should be some way to avoid code repetition
-definition fib_category : category Fib :=
-  ⦃ category, 
-    hom := λ a b, pretype a → pretype b,
-    comp := λ a b c, function.comp ,
-    ID := _,
-    assoc := λ a b c d h g f, eq.symm (function.comp.assoc h g f),
-    id_left := λ a b f,  function.comp.left_id f,
-    id_right := λ a b f, function.comp.right_id f ⦄
+-- -- TODO: definition is exactly the same as for type_category
+-- -- should be some way to avoid code repetition
+-- definition fib_category : category Fib :=
+--   ⦃ category, 
+--     hom := λ a b, pretype a → pretype b,
+--     comp := λ a b c, function.comp ,
+--     ID := _,
+--     assoc := λ a b c d h g f, eq.symm (function.comp.assoc h g f),
+--     id_left := λ a b f,  function.comp.left_id f,
+--     id_right := λ a b f, function.comp.right_id f ⦄
 
-definition FibCat := Mk fib_category
+-- definition FibCat := Mk fib_category 
 
 open functor
 
 namespace matching_object
   
-definition matching_object {C : Category} [invcat C] (X : C ⇒ FibCat) (z : C):=
+definition matching_object {C : Category} [invcat C] (X : C ⇒ Type_category) (z : C):=
   limit (X ∘f (forget C z))
 end matching_object

@@ -77,3 +77,15 @@ definition c2_functor (C : Category) (A B : C) : CatTwo ⇒ C :=
 
 
 definition product {C : Category} (A B : C) := limit (c2_functor _ A B)
+
+
+check Type_category
+
+
+
+
+
+
+
+
+
