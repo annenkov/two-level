@@ -3,22 +3,27 @@ import algebra.category
 open natural_transformation sigma.ops
 open category
 
-definition const_funct [reducible] [unfold_full] (J C : Category) (c : C) : J ⇒ C :=
+
+-- Given categories J and C, we have a canonical functor [const_funct] from the category C to the functor category C^J.
+-- Here, we do not define this functor in full, but we define the object and morphism part.
+-- These are called [const_funct_obj] and [const_funct_morph].
+-- It would be very easy to complete this to an actual functor, but we do not need this.
+
+definition const_funct_obj [reducible] [unfold_full] (J C : Category) (c : C) : J ⇒ C :=
   ⦃ functor,
     object := λ i, c,
     morphism := λ i j g, id,
     respect_id := λ i, eq.refl _,
     respect_comp := λi j k f g, by rewrite id_left ⦄
 
-definition const_funct_functorial [reducible] [unfold_full] (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct J C c) ⟹ (const_funct J C d)
+definition const_funct_morph [reducible] [unfold_full] (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct_obj J C c) ⟹ (const_funct_obj J C d)
   := mk (λ j, f)
         begin intros, esimp, rewrite id_left, rewrite id_right end
 
-
-definition cone_with_tip [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) (tip : C) := const_funct _ _ tip ⟹ D
+definition cone_with_tip [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) (tip : C) := const_funct_obj _ _ tip ⟹ D
 
 definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (x y : C) (f : x ⟶ y) (cy : cone_with_tip D y) : cone_with_tip D x
-  := cy ∘n (const_funct_functorial J C x y f)
+  := cy ∘n (const_funct_morph J C x y f)
 
 
 definition cone [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) := Σ c, cone_with_tip D c
@@ -110,7 +115,7 @@ definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
   end
 
 definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
-⟨ (const_funct _ _ unit) ⟹ D ,
+⟨ (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
     (λ a L, natural_map L a ⋆)
     (λ a b f, funext (λ L, happly (naturality L f) _))
