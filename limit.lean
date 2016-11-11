@@ -20,15 +20,20 @@ definition const_funct_morph [reducible] [unfold_full] (J C : Category) (c d : C
   := mk (λ j, f)
         begin intros, esimp, rewrite id_left, rewrite id_right end
 
+
+-- Given categories J and C as before, and a functor D : J ⇒ C, we have a category of cones.
+-- We present it as "fibred" over C. For each object [tip : C] we have a category (here only a type) of cones
+-- with "tip" [tip]. This is just the type of natural transformations between the functor constantly [tip] and D.
 definition cone_with_tip [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) (tip : C) := const_funct_obj _ _ tip ⟹ D
 
-definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (x y : C) (f : x ⟶ y) (cy : cone_with_tip D y) : cone_with_tip D x
-  := cy ∘n (const_funct_morph J C x y f)
+-- For [f : tip₁ ⟶ tip₂], we have a function between the type of cones with tip tip₂, and the onew with tip tip₁.
+definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (tip₁ tip₂ : C) (f : tip₁ ⟶ tip₂) (c₂ : cone_with_tip D tip₂) : cone_with_tip D tip₁
+  := c₂ ∘n (const_funct_morph J C tip₁ tip₂ f)
 
-
+-- A cone is a tip together with a cone under this tip.
 definition cone [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) := Σ c, cone_with_tip D c
 
-
+-- morphisms of cones.
 structure cone_hom {J C : Category} {D : J ⇒ C} (c : cone D ) (c' : cone D) : Type :=
   (chom : c.1 ⟶ c'.1)
   (commute_triangle : ∀ i, natural_map c.2 i = natural_map c'.2 i ∘ chom)
