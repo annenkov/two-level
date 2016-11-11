@@ -102,21 +102,18 @@ definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone
   natural_transformation.mk
     (λ a L, natural_map L a ⋆)
     (λ a b f, funext (λ L, happly (naturality L f) _))
-    -- (λ a b f, funext (λ (L : (const_funct _ _ unit) ⟹ D),
-    --   calc
-    --     (@category.comp _ _ _ _ _ (morphism D f) (λ L', natural_map L' a ⋆)) L
-    --         = morphism D f (natural_map L a ⋆) : rfl
-    --     ... = natural_map L b ⋆ : sorry
-    --     ... = sorry : sorry -- function.comp (natural_map L b ⋆) id : sorry
-    --     ... = (@category.comp _ _ _ _ _ (λ L', natural_map L' b ⋆) id) L : sorry
-    -- ))
 ⟩
 
 
--- definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : limit D :=
---   ⦃ has_terminal_obj _,
---     terminal := cone_in_pretype D,
---     is_terminal_obj := sorry ⦄
+definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : limit D :=
+  ⦃ has_terminal_obj _,
+    terminal := cone_in_pretype D,
+    is_terminal_obj := 
+      ⦃ is_terminal _,
+        term_hom := λ C', ⦃ cone_hom _ _, chom := sorry, commute_triangle := sorry ⦄,
+        unique_term_hom := sorry
+      ⦄ 
+  ⦄
 
 
 
