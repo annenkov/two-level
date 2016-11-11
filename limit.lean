@@ -10,10 +10,19 @@ definition const_funct [reducible] [unfold_full] (J C : Category) (c : C) : J �
     respect_id := λ i, eq.refl _,
     respect_comp := λi j k f g, by rewrite id_left ⦄
 
+definition const_funct_functorial [reducible] [unfold_full] (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct J C c) ⟹ (const_funct J C d)
+  := mk (λ j, f)
+        begin intros, esimp, rewrite id_left, rewrite id_right end
+
 
 definition cone_with_tip [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) (tip : C) := const_funct _ _ tip ⟹ D
 
+definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (x y : C) (f : x ⟶ y) (cy : cone_with_tip D y) : cone_with_tip D x
+  := cy ∘n (const_funct_functorial J C x y f)
+
+
 definition cone [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) := Σ c, cone_with_tip D c
+
 
 structure cone_hom {J C : Category} {D : J ⇒ C} (c : cone D ) (c' : cone D) : Type :=
   (chom : c.1 ⟶ c'.1)
