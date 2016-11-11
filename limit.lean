@@ -40,6 +40,12 @@ structure cone_hom {J C : Category} {D : J ⇒ C} (c : cone D ) (c' : cone D) : 
 
 open cone_hom
 
+
+-- I (Nicolai) am not sure whether this should be here. Maybe I will reorder it later.
+-- definition cone
+
+
+
 definition cone_hom_eq {J C : Category} {D : J ⇒ C } {c c' : cone D}
                        {f f': cone_hom c c'} (p : chom f = chom f') : f = f' :=
   begin cases f, cases f', cases p, reflexivity end
@@ -132,7 +138,8 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
     terminal := cone_in_pretype D,
     is_terminal_obj := 
       ⦃ is_terminal _,
-        term_hom := λ C', ⦃ cone_hom _ _, chom := sorry, commute_triangle := sorry ⦄,
+        term_hom := λ C', mk sorry -- (λ x, sorry) -- cone_with_tip_functorial D unit C'.1 (λ tt, x) C') 
+                             sorry, -- begin intro C',    end, -- λ C', λ x, _, -- ⦃ cone_hom _ _, chom := sorry, commute_triangle := sorry ⦄,
         unique_term_hom := sorry
       ⦄ 
   ⦄
