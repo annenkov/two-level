@@ -126,7 +126,7 @@ definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
   end
 
 definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
-⟨ (const_funct_obj _ _ unit) ⟹ D ,
+⟨ cone_with_tip _ unit, -- (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
     (λ a L, natural_map L a ⋆)
     (λ a b f, funext (λ L, happly (naturality L f) _))
