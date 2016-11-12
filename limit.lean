@@ -48,9 +48,9 @@ definition cone_hom_eq {J C : Category} {D : J ⇒ C } {c c' : cone D}
 
 
 -- I add this here, is it already somewhere? Is there a lemma stating that equality between nat. transf. is equality of morphisms (laws trivially equal)? Or is this automatic enough in Lean?
---definition cone_eq {J C : Category} {D : J ⇒ C} {c c' : cone D} (sigma.pr1 c = sigma.pr1 c') (nat. trans. part without laws equal) : c = c'
---  := sorry
+-- definition cone_with_tip_eq {J C : Category} (D : J ⇒ C) (tip : C) (c₁ c₂ : cone_with_tip D tip) 
 
+-- HOT CAN I DO THIS?
 
 
 definition cone_hom_comp {J C : Category} {D : J ⇒ C } {c c' c'': cone D}
@@ -145,7 +145,9 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
       ⦃ is_terminal _,
         term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) (sigma.pr2 C)) 
                             begin intro j, esimp end,
-        unique_term_hom := begin intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,    exact sorry end 
+        unique_term_hom := begin intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,  
+                                 -- now: need to show equality of two cones with tip unit:
+                                 exact sorry end 
           -- I have changed the definition of [is_terminal], basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This means that, instead of showing f = g, we have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.  
       ⦄ 
   ⦄
