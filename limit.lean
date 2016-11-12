@@ -46,6 +46,13 @@ definition cone_hom_eq {J C : Category} {D : J ⇒ C } {c c' : cone D}
                        {f f': cone_hom c c'} (p : chom f = chom f') : f = f' :=
   begin cases f, cases f', cases p, reflexivity end
 
+
+-- I add this here, is it already somewhere? Is there a lemma stating that equality between nat. transf. is equality of morphisms (laws trivially equal)? Or is this automatic enough in Lean?
+--definition cone_eq {J C : Category} {D : J ⇒ C} {c c' : cone D} (sigma.pr1 c = sigma.pr1 c') (nat. trans. part without laws equal) : c = c'
+--  := sorry
+
+
+
 definition cone_hom_comp {J C : Category} {D : J ⇒ C } {c c' c'': cone D}
                          (f' : cone_hom c' c'') (f : cone_hom c c') :=
   ⦃ cone_hom, chom := chom f' ∘ chom f,
@@ -64,9 +71,11 @@ definition ConeCat [reducible] {J C : Category} (D : J ⇒ C) : Category := cate
 
 set_option formatter.hide_full_terms false
 
-structure is_terminal [class] {C : Category} (c : C) :=
+
+-- CAVEAT: I (Nicolai) have changed this.
+structure is_terminal [class] {C : Category} (c : C) := 
   (term_hom : ∀ c', hom c' c)
-  (unique_term_hom : ∀ c' (f f' : hom c' c), f = f')
+  (unique_term_hom : ∀ c' (f  : hom c' c), f = term_hom c')
 
 structure has_terminal_obj [class] (C : Category) :=
   (terminal : C)
@@ -136,8 +145,8 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
       ⦃ is_terminal _,
         term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) (sigma.pr2 C)) 
                             begin intro j, esimp end,
-        unique_term_hom := begin intros C f g, apply sorry end 
-          -- maybe is_terminal should be defined differently, basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This would mean that, instead of showing f = g, we would have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.
+        unique_term_hom := begin intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,    exact sorry end 
+          -- I have changed the definition of [is_terminal], basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This means that, instead of showing f = g, we have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.  
       ⦄ 
   ⦄
 
