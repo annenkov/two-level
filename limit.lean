@@ -9,16 +9,16 @@ open category
 -- These are called [const_funct_obj] and [const_funct_morph].
 -- It would be very easy to complete this to an actual functor, but we do not need this.
 
-definition const_funct_obj [reducible] [unfold_full] (J C : Category) (c : C) : J ⇒ C :=
+definition const_funct_obj (J C : Category) (c : C) : J ⇒ C :=
   ⦃ functor,
     object := λ i, c,
     morphism := λ i j g, id,
     respect_id := λ i, eq.refl _,
     respect_comp := λi j k f g, by rewrite id_left ⦄
 
-definition const_funct_morph [reducible] [unfold_full] (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct_obj J C c) ⟹ (const_funct_obj J C d)
+definition const_funct_morph (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct_obj J C c) ⟹ (const_funct_obj J C d)
   := mk (λ j, f)
-        begin intros, esimp, rewrite id_left, rewrite id_right end
+        begin intros, esimp, unfold const_funct_obj, rewrite id_left, rewrite id_right end
 
 
 -- Given categories J and C as before, and a functor D : J ⇒ C, we have a category of cones.
@@ -26,9 +26,11 @@ definition const_funct_morph [reducible] [unfold_full] (J C : Category) (c d : C
 -- with "tip" [tip]. This is just the type of natural transformations between the functor constantly [tip] and D.
 definition cone_with_tip [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) (tip : C) := const_funct_obj _ _ tip ⟹ D
 
+open functor
 -- For [f : tip₁ ⟶ tip₂], we have a function between the type of cones with tip tip₂, and the onew with tip tip₁.
-definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (tip₁ tip₂ : C) (f : tip₁ ⟶ tip₂) (c₂ : cone_with_tip D tip₂) : cone_with_tip D tip₁
-  := c₂ ∘n (const_funct_morph J C tip₁ tip₂ f)
+definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (tip₁ tip₂ : C) (f : tip₁ ⟶ tip₂) (c₂ : cone_with_tip D tip₂) 
+                                    : cone_with_tip D tip₁
+  :=  natural_transformation.compose c₂ (const_funct_morph J C tip₁ tip₂ f)
 
 -- A cone is a tip together with a cone under this tip.
 definition cone [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) := Σ c, cone_with_tip D c
@@ -121,10 +123,6 @@ definition product {C : Category} (A B : C) := limit (c2_functor _ A B)
 open natural_transformation
 open - [notation] category
 
-variables {C : Category.{1 1}}
-variable D : C ⇒ Type_category
-variable z : C
-
 open functor unit
 
 definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
@@ -139,17 +137,37 @@ definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone
     (λ a b f, funext (λ L, happly (naturality L f) _))
 ⟩
 
+open function
+
+-- just for rewriting in limit_in_pretype, because esimp gives an error
+definition natural_map_proj {C D : Category} (F G: functor C D) (η :Π a, F a ⟶ G a)
+  (nat : Π⦃a b : C⦄ (f : a ⟶ b), G f ∘ η a = η b ∘ F f) : natural_map (natural_transformation.mk η nat) = η := rfl
 
 definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : limit D :=
   ⦃ has_terminal_obj _,
     terminal := cone_in_pretype D,
     is_terminal_obj := 
       ⦃ is_terminal _,
-        term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) (sigma.pr2 C)) 
-                            begin intro j, esimp end,
-        unique_term_hom := begin intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,  
-                                 -- now: need to show equality of two cones with tip unit:
-                                   exact sorry end 
+        term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) C.2) (λ x, rfl),
+        unique_term_hom := 
+          begin 
+            intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,
+            -- now: need to show equality of two cones with tip unit:
+            apply cone_with_tip_eq,            
+            cases C.2 with [η₁, NatSq₁], esimp,
+            unfold cone_with_tip_functorial, unfold natural_transformation.compose,
+            -- I (Danil) have to add this stupid equalities, because unfolding is not working
+            -- It seems that composition of morpshisms not resolved to composition of functions again
+            have H : natural_map (const_funct_morph J Type_category unit C.1 (λ tt, x)) = (λ j, (λ tt, x)), from rfl,
+            cases (chom f x) with [η₂, NatSq₂], unfold const_funct_obj at *,
+            repeat rewrite natural_map_proj, rewrite H,
+            apply funext, intro j, apply funext, intro u,
+            -- repeat rewrite natural_map_proj, apply funext, intros j, rewrite H,
+            -- apply funext, intros u,
+            -- that's what rhs of the goal should simplify to
+            have H' : (η₁ j ∘ λ tt, x) u = η₁ j x, from rfl,            
+            exact sorry 
+          end 
           -- I have changed the definition of [is_terminal], basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This means that, instead of showing f = g, we have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.  
       ⦄ 
   ⦄
