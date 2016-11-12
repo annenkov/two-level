@@ -134,8 +134,8 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
     terminal := cone_in_pretype D,
     is_terminal_obj := 
       ⦃ is_terminal _,
-        term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) (sigma.pr2 C)) -- sorry -- begin intro x, unfold cone_in_pretype, apply (cone_with_tip_functorial D unit C.1 (λ tt, x)), apply sigma.pr2 end 
-                             sorry, -- begin intro C',    end, -- λ C', λ x, _, -- ⦃ cone_hom _ _, chom := sorry, commute_triangle := sorry ⦄,
+        term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) (sigma.pr2 C)) 
+                            begin intro j, esimp end,
         unique_term_hom := sorry
       ⦄ 
   ⦄
