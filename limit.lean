@@ -136,7 +136,8 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
       ⦃ is_terminal _,
         term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) (sigma.pr2 C)) 
                             begin intro j, esimp end,
-        unique_term_hom := sorry
+        unique_term_hom := begin intros C f g, apply sorry end 
+          -- maybe is_terminal should be defined differently, basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This would mean that, instead of showing f = g, we would have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.
       ⦄ 
   ⦄
 
