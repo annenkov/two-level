@@ -47,11 +47,12 @@ definition cone_hom_eq {J C : Category} {D : J ⇒ C } {c c' : cone D}
   begin cases f, cases f', cases p, reflexivity end
 
 
--- I add this here, is it already somewhere? Is there a lemma stating that equality between nat. transf. is equality of morphisms (laws trivially equal)? Or is this automatic enough in Lean?
---definition cone_with_tip_eq {J C : Category} (D : J ⇒ C) (tip : C) (c₁ c₂ : cone_with_tip D tip) : (c₁ = c₂.1) → c₁ = c₂
---  := begin end
-
--- HOT CAN I DO THIS?
+-- Lemma stating that equality between nat. transf. is equality of morphisms (laws trivially equal)
+-- Danil : It seems that the second goal (laws) is resolved automatically. So, we could use congruence
+--         tactic directly to compare two natural transformations, but I'll leave this here as an example.
+definition cone_with_tip_eq {J C : Category} (D : J ⇒ C) (tip : C) (c₁ c₂ : cone_with_tip D tip) :
+  (natural_map c₁ = natural_map c₂) → c₁ = c₂
+  := begin intros NatMapEq, cases c₁, cases c₂, congruence, esimp at *, apply NatMapEq end
 
 
 definition cone_hom_comp {J C : Category} {D : J ⇒ C } {c c' c'': cone D}
