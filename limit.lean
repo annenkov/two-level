@@ -154,18 +154,33 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
             intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,
             -- now: need to show equality of two cones with tip unit:
             apply cone_with_tip_eq,            
-            cases C.2 with [η₁, NatSq₁], esimp,
-            unfold cone_with_tip_functorial, unfold natural_transformation.compose,
-            -- I (Danil) have to add this stupid equalities, because unfolding is not working
-            -- It seems that composition of morpshisms not resolved to composition of functions again
-            have H : natural_map (const_funct_morph J Type_category unit C.1 (λ tt, x)) = (λ j, (λ tt, x)), from rfl,
-            cases (chom f x) with [η₂, NatSq₂], unfold const_funct_obj at *,
-            repeat rewrite natural_map_proj, rewrite H,
-            apply funext, intro j, apply funext, intro u,
-            -- repeat rewrite natural_map_proj, apply funext, intros j, rewrite H,
-            -- apply funext, intros u,
-            -- that's what rhs of the goal should simplify to
-            have H' : (η₁ j ∘ λ tt, x) u = η₁ j x, from rfl,            
+            cases C.2 with [η₁, NatSq₁], esimp, 
+
+            -- NEW ATTEMPT
+            apply funext, intro j,
+            apply funext, intro tt,
+            -- now: have do show an equality in D(j).
+            
+            -- QUESTION:
+            -- in the following "lem : x = y", the "x" is just the expression on the right-hand side of the current goal. Why is it not accepted?
+            have lem : natural_map (cone_with_tip_functorial D unit C.1 (λ tt, x) (natural_transformation.mk η₁ NatSq₁)) j tt = η₁ j x,
+            from sorry,
+
+
+--            unfold cone_with_tip_functorial, esimp, unfold natural_transformation.compose, esimp, 
+
+            -- OLD ATTEMPT
+            -- unfold cone_with_tip_functorial, unfold natural_transformation.compose,
+            -- -- I (Danil) have to add this stupid equalities, because unfolding is not working
+            -- -- It seems that composition of morpshisms not resolved to composition of functions again
+            -- have H : natural_map (const_funct_morph J Type_category unit C.1 (λ tt, x)) = (λ j, (λ tt, x)), from rfl,
+            -- cases (chom f x) with [η₂, NatSq₂], unfold const_funct_obj at *,
+            -- repeat rewrite natural_map_proj, rewrite H,
+            -- apply funext, intro j, apply funext, intro u,
+            -- -- repeat rewrite natural_map_proj, apply funext, intros j, rewrite H,
+            -- -- apply funext, intros u,
+            -- -- that's what rhs of the goal should simplify to
+            -- have H' : (η₁ j ∘ λ tt, x) u = η₁ j x, from rfl,            
             exact sorry 
           end 
           -- I have changed the definition of [is_terminal], basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This means that, instead of showing f = g, we have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.  
