@@ -16,7 +16,7 @@ definition const_funct_obj [reducible] [unfold_full] (J C : Category) (c : C) : 
     respect_id := λ i, eq.refl _,
     respect_comp := λi j k f g, by rewrite id_left ⦄
 
-definition const_funct_morph (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct_obj J C c) ⟹ (const_funct_obj J C d)
+definition const_funct_morph [reducible] (J C : Category) (c d : C) (f : c ⟶ d) : (const_funct_obj J C c) ⟹ (const_funct_obj J C d)
   := mk (λ j, f)
         begin intros, esimp,  rewrite id_left, rewrite id_right end
 
@@ -28,7 +28,7 @@ definition cone_with_tip [reducible] [unfold_full] {J C : Category} (D : J ⇒ C
 
 open functor
 -- For [f : tip₁ ⟶ tip₂], we have a function between the type of cones with tip tip₂, and the onew with tip tip₁.
-definition cone_with_tip_functorial {J C : Category} (D : J ⇒ C) (tip₁ tip₂ : C) (f : tip₁ ⟶ tip₂) (c₂ : cone_with_tip D tip₂) 
+definition cone_with_tip_functorial [reducible] [unfold_full] {J C : Category} (D : J ⇒ C) (tip₁ tip₂ : C) (f : tip₁ ⟶ tip₂) (c₂ : cone_with_tip D tip₂)
                                     : cone_with_tip D tip₁
   :=  natural_transformation.compose c₂ (const_funct_morph J C tip₁ tip₂ f)
 
@@ -77,7 +77,7 @@ set_option formatter.hide_full_terms false
 
 
 -- CAVEAT: I (Nicolai) have changed this.
-structure is_terminal [class] {C : Category} (c : C) := 
+structure is_terminal [class] {C : Category} (c : C) :=
   (term_hom : ∀ c', hom c' c)
   (unique_term_hom : ∀ c' (f  : hom c' c), f = term_hom c')
 
@@ -130,7 +130,7 @@ definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
    intros H x, rewrite H
   end
 
-definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
+definition cone_in_pretype [reducible] {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
 ⟨ cone_with_tip _ unit, -- (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
     (λ a L, natural_map L a ⋆)
@@ -139,68 +139,35 @@ definition cone_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : cone
 
 open function
 
--- just for rewriting in limit_in_pretype, because esimp gives an error
+-- just for rewriting in limit_in_pretype, because projections are left not simplified sometimes
 definition natural_map_proj {C D : Category} (F G: functor C D) (η :Π a, F a ⟶ G a)
   (nat : Π⦃a b : C⦄ (f : a ⟶ b), G f ∘ η a = η b ∘ F f) : natural_map (natural_transformation.mk η nat) = η := rfl
 
 definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : limit D :=
   ⦃ has_terminal_obj _,
     terminal := cone_in_pretype D,
-    is_terminal_obj := 
+    is_terminal_obj :=
       ⦃ is_terminal _,
         term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) C.2) (λ x, rfl),
-        unique_term_hom := 
-          begin 
-            intros C f, apply cone_hom_eq, esimp, apply funext, intro x, esimp,
+        unique_term_hom :=
+          begin
+            intros C f,
+            cases f with [chom', ct],
+            apply cone_hom_eq,
+            apply funext, intro x, esimp,
             -- now: need to show equality of two cones with tip unit:
-            apply cone_with_tip_eq,            
-            cases C.2 with [η₁, NatSq₁], esimp, 
-
-            -- NEW ATTEMPT
+            apply cone_with_tip_eq,
             apply funext, intro j,
             apply funext, intro t,
             -- now: have do show an equality in D(j).
-            --unfold cone_with_tip_functorial,
-            -- QUESTION:
-            -- in the following "lem : x = y", the "x" is just the expression on the right-hand side of the current goal. Why is it not accepted?
-            esimp at *,
-            have lem : natural_map (cone_with_tip_functorial D unit C.1 (λ tt, x) (natural_transformation.mk η₁ @NatSq₁)) j t = η₁ j x,
-            from rfl, -- I cannot test wether this is really judgmentally equal because of the strange error above, but I hope it is       
-            -- new goal after rewriting with lem: natural_map (chom f x) j tt = η₁ j x
-            -- the proof of this should use the second component of f
-            unfold cone_with_tip_functorial at *, esimp at *, unfold natural_transformation.compose at *,
-            repeat rewrite natural_map_proj, repeat rewrite natural_map_proj at lem,
-            have lem' : #function (η₁ j∘ natural_map (const_funct_morph J Type_category unit C.1 (λ tt, x)) j) t = η₁ j x, from lem,
-            assert HH :
-             natural_map (chom f x) j t = #function (η₁ j∘ natural_map (const_funct_morph J Type_category unit C.1 (λ tt, x)) j) t,
-            begin rewrite lem', apply sorry
-            end,
-
-            -- OLD ATTEMPT, probably some parts here should still be used.
-            -- unfold cone_with_tip_functorial, unfold natural_transformation.compose,
-            -- -- I (Danil) have to add this stupid equalities, because unfolding is not working
-            -- -- It seems that composition of morpshisms not resolved to composition of functions again
-            -- have H : natural_map (const_funct_morph J Type_category unit C.1 (λ tt, x)) = (λ j, (λ tt, x)), from rfl,
-            -- cases (chom f x) with [η₂, NatSq₂], unfold const_funct_obj at *,
-            -- repeat rewrite natural_map_proj, rewrite H,
-            -- apply funext, intro j, apply funext, intro u,
-            -- -- repeat rewrite natural_map_proj, apply funext, intros j, rewrite H,
-            -- -- apply funext, intros u,
-            -- -- that's what rhs of the goal should simplify to
-            -- have H' : (η₁ j ∘ λ tt, x) u = η₁ j x, from rfl,            
-            exact HH 
-          end 
-          -- I have changed the definition of [is_terminal], basically by saying that [hom C' C] is contractible instead of inhabited + propositional. This means that, instead of showing f = g, we have to show f = term_hom. I guess a proof of f = g would essentially combine a proof of f = term_hom with a proof of g = term_hom anyway.  
-      ⦄ 
+            esimp at *, unfold natural_transformation.compose, repeat rewrite natural_map_proj,
+            unfold cone_in_pretype at *,
+            rewrite natural_map_proj at ct, rewrite ct,
+            -- we have to assert the same goal, but explicitly say that composition is just composition of functions,
+            -- because some definitions related to class instances are not unfolded
+            assert HH : natural_map (chom' x) j t = #function (((λ L, natural_map L j ⋆)∘chom')∘λ tt, x) t,
+              begin esimp, cases t, reflexivity end,
+            exact HH
+          end
+      ⦄
   ⦄
-
-
-
--- definition is_terminal_const_to_unit {C : Category} {D : C ⇒ Type_category} (C : ConeCat D) : is_terminal D :=
-
-
--- definition type_limit {C : Category} {F : C ⇒ Type_category} : limit F:=
--- ⦃ has_terminal_obj,
---   terminal := _,
---   is_terminal_obj := _
---   ⦄
