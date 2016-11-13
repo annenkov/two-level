@@ -164,12 +164,14 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
             -- QUESTION:
             -- in the following "lem : x = y", the "x" is just the expression on the right-hand side of the current goal. Why is it not accepted?
             have lem : natural_map (cone_with_tip_functorial D unit C.1 (λ tt, x) (natural_transformation.mk η₁ NatSq₁)) j tt = η₁ j x,
-            from sorry,
+            from rfl, -- I cannot test wether this is really judgmentally equal because of the strange error above, but I hope it is
+
+            -- new goal after rewriting with lem: natural_map (chom f x) j tt = η₁ j x
+            -- the proof of this should use the second component of f
 
 
---            unfold cone_with_tip_functorial, esimp, unfold natural_transformation.compose, esimp, 
 
-            -- OLD ATTEMPT
+            -- OLD ATTEMPT, probably some parts here should still be used.
             -- unfold cone_with_tip_functorial, unfold natural_transformation.compose,
             -- -- I (Danil) have to add this stupid equalities, because unfolding is not working
             -- -- It seems that composition of morpshisms not resolved to composition of functions again
