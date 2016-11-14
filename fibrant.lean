@@ -1,5 +1,6 @@
-import data.equiv
---open equiv
+import data.equiv facts
+
+open eq
 
 notation X `≃ₛ` Y := equiv X Y
 constant is_fibrant' : Type → Prop
@@ -240,7 +241,16 @@ open sigma.ops
 
 definition fibre_projection {X : Type}{Y : X → Type}(x : X)
   : fibreₛ (λ (p : Σ (x : X), Y x), p.1) x ≃ₛ Y x
-  := sorry
+  := begin
+      unfold fibreₛ, esimp,
+      refine (equiv.mk _ _ _ _),
+           { intro, cases a with [a₁, a₂], cases a₂, cases a₁, assumption},
+           { intros, apply (⟨⟨x,a⟩, rfl⟩) },
+           { unfold function.left_inverse, intro y,
+             cases y with [y₁, y₂], cases y₁ with [z₁, z₂], esimp,
+             esimp at *, congruence, cases y₂, congruence },
+           {apply (λ x, rfl)}
+     end
 
 definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
   Σ (F : B → Fib.{u}), Π (b : B), F b ≃ₛ fibreₛ p b
