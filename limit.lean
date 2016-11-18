@@ -123,7 +123,7 @@ definition product {C : Category} (A B : C) := limit (c2_functor _ A B)
 open natural_transformation
 open - [notation] category
 
-open functor unit
+open functor poly_unit
 
 definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
   begin
@@ -131,9 +131,9 @@ definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
   end
 
 definition cone_in_pretype [reducible] {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
-⟨ cone_with_tip _ unit, -- (const_funct_obj _ _ unit) ⟹ D ,
+⟨ cone_with_tip _ poly_unit, -- (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
-    (λ a L, natural_map L a ⋆)
+    (λ a L, natural_map L a star)
     (λ a b f, funext (λ L, happly (naturality L f) _))
 ⟩
 
@@ -148,7 +148,7 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
     terminal := cone_in_pretype D,
     is_terminal_obj :=
       ⦃ is_terminal _,
-        term_hom := λ C, mk (λ x, cone_with_tip_functorial D unit C.1 (λ tt, x) C.2) (λ x, rfl),
+        term_hom := λ C, mk (λ x, cone_with_tip_functorial D poly_unit C.1 (λ tt, x) C.2) (λ x, rfl),
         unique_term_hom :=
           begin
             intros C f,
@@ -165,7 +165,7 @@ definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : lim
             rewrite natural_map_proj at ct, rewrite ct,
             -- we have to assert the same goal, but explicitly say that composition is just composition of functions,
             -- because some definitions related to class instances are not unfolded
-            assert HH : natural_map (chom' x) j t = #function (((λ L, natural_map L j ⋆)∘chom')∘λ tt, x) t,
+            assert HH : natural_map (chom' x) j t = #function (((λ L, natural_map L j star)∘chom')∘λ tt, x) t,
               begin esimp, cases t, reflexivity end,
             exact HH
           end
