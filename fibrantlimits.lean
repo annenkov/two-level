@@ -92,6 +92,57 @@ definition pullback_diagram (f : A → C) (g : B → C) : PullbackCat ⇒ Type_c
 
 open functor natural_transformation
 
+--set_option pp.universes true
+
+definition nat_transf_sigma_iso {C D : Category} {F G : C ⇒ D} : 
+  F ⟹ G ≃ₛ Σ (η : Π(a : C), hom (F a) (G a)), (Π{a b : C} (f : hom a b), G f ∘ η a = η b ∘ F f) := 
+  equiv.mk  (λ N, match N with
+                  |mk η NatSq := ⟨η, NatSq⟩
+                  end) 
+            (λ S, match S with
+                  | ⟨η, NatSq⟩ := mk η NatSq
+                  end)
+  begin unfold function.left_inverse, intro x, cases x, esimp end 
+  begin unfold function.right_inverse, unfold function.left_inverse, intro x, cases x, esimp end
+
+open poly_unit
+
+definition nat_unit_Pullback_equiv : 
+  const_funct_obj PullbackCat Type_category poly_unit.{max 1 u} ⟹ pullback_diagram f g ≃ₛ Pullback f g:=
+  begin 
+    unfold const_funct_obj,
+    refine (equiv.mk _ _ _ _),
+    { intro N, cases N with [η, NatSq], unfold pullback_diagram at *, esimp at *, 
+      refine Pullback.mk _ _ _ _,
+      apply (η obA star), apply (η obB star), apply (η obC star), esimp,
+      refine (_,_),
+      have H : f ∘ η obA = η obC ∘ id, from NatSq (inl pb_cat_hom.f1), apply happly H,
+      have H : g ∘ η obB = η obC ∘ id, from NatSq (inl pb_cat_hom.f2), apply happly H },
+    { intro PB, cases PB, cases p_law with [f_eq, g_eq],
+      refine mk _ _,
+      intros a, unfold pullback_diagram, esimp, intro uu, cases a: esimp: assumption,
+      intros a b pb, unfold pullback_diagram, cases pb with [pb_hom, p_id], 
+      cases pb_hom: esimp, 
+      { apply funext, intros, apply f_eq},
+      { apply funext, intros, apply g_eq},
+      { cases p_id, esimp}},
+    { unfold function.left_inverse, intros x, cases x,
+        esimp at *, congruence, apply funext, intros, apply funext, intro uu, esimp,
+        cases x: esimp: cases uu: reflexivity },
+    { unfold function.right_inverse, unfold function.left_inverse, intros x, 
+      cases x, cases p_law with [f_eq, g_eq], esimp }
+  end
+
+definition limit_nat_transf_equiv : 
+  limit (pullback_diagram f g) ≃ₛ const_funct_obj PullbackCat Type_category poly_unit.{max 1 u} ⟹ pullback_diagram f g :=
+  equiv.mk 
+    begin intro L, cases L, unfold const_funct_obj,
+      refine (mk _ _), 
+        esimp at *, intro a, cases a: cases terminal with [t, c]: cases c: unfold const_funct_obj at *: apply sorry,
+        apply sorry
+    end 
+    begin intro N, cases N, unfold const_funct_obj at *, apply sorry,  end sorry sorry
+
 definition nat_unit_equiv_sigma {C : Category} {X : C ⇒ Type_category } : 
   (const_funct_obj C Type_category unit ⟹ X) ≃ₛ Σ (c : Π y : C, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' := sorry
 
