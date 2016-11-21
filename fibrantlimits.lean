@@ -92,8 +92,6 @@ definition pullback_diagram (f : A → C) (g : B → C) : PullbackCat ⇒ Type_c
 
 open functor natural_transformation
 
---set_option pp.universes true
-
 definition nat_transf_sigma_iso {C D : Category} {F G : C ⇒ D} :
   F ⟹ G ≃ₛ Σ (η : Π(a : C), hom (F a) (G a)), (Π{a b : C} (f : hom a b), G f ∘ η a = η b ∘ F f) :=
   equiv.mk  (λ N, match N with
@@ -109,10 +107,13 @@ open poly_unit
 
 open equiv
 
+definition const_funct_unit [reducible] [unfold_full] := 
+  const_funct_obj PullbackCat Type_category poly_unit.{max 1 u}
+
 definition nat_unit_Pullback_equiv :
-  const_funct_obj PullbackCat Type_category poly_unit.{max 1 u} ⟹ pullback_diagram f g ≃ₛ Pullback f g:=
+  const_funct_unit ⟹ pullback_diagram f g ≃ₛ Pullback f g:=
   begin
-    unfold const_funct_obj,
+    esimp,
     refine (equiv.mk _ _ _ _),
     { intro N, cases N with [η, NatSq], unfold pullback_diagram at *, esimp at *,
       refine Pullback.mk _ _ _ _,
@@ -135,62 +136,47 @@ definition nat_unit_Pullback_equiv :
       cases x, cases p_law with [f_eq, g_eq], esimp }
   end
 
-definition limit_nat_transf_equiv :
-  limit (pullback_diagram f g) ≃ₛ const_funct_obj PullbackCat Type_category poly_unit.{max 1 u} ⟹ pullback_diagram f g :=
-  equiv.mk
-    begin intro L, cases L, unfold const_funct_obj,
-      refine (mk _ _),
-      --have H : cone (pullback_diagram f g), from cone_in_pretype (pullback_diagram f g), unfold cone at H, unfold cone_with_tip at H,
-        esimp at *: intro a: cases a: cases terminal with [t, c]: cases c: unfold const_funct_obj at *:
-
-        apply sorry,
-        apply sorry
-    end
-    begin
-      intro N, cases N,
-      unfold const_funct_obj at *,
-      apply @limit_in_pretype.{max 1 u} PullbackCat (pullback_diagram f g),
-    end
-    sorry sorry
+definition Pullback'_Pullback_equiv : Pullback' f g ≃ₛ Pullback f g:=
+  equiv.mk 
+    (λ x, begin cases x with [p₁, p₂], cases p₂ with [pp₁, pp₂], 
+                apply Pullback.mk pp₁ p₁ (g p₁) (pp₂, rfl) end) 
+    (λ x, begin cases x, cases p_law with [p₁, p₂], refine ⟨ pB, #eq.ops ⟨pA, p₁ ⬝ p₂⁻¹⟩⟩end) 
+    (λ x, begin cases x with [p₁, p₂], cases p₂ with [pp₁, pp₂], esimp end) 
+    (λ x, begin cases x, cases p_law with [p₁, p₂], esimp, cases p₂, esimp end)
 
 open eq
 
 section equiv
-  -- TODO: move these definitions to facts.lean or other "library" file
+  -- TODO: move these definitions to facts.lean or another "library" file
   open eq.ops
   definition sigma_eq_congr {A: Type} {F : A → Type} {a a': A} {b : F a} {b' : F a'} :
     (Σ (p : a = a'), ((p ▹ b) = b')) → ⟨ a, b ⟩ = ⟨a', b'⟩ :=
       begin intro p, cases p with [p₁, p₂], cases p₁, cases p₂, esimp end
 
   definition sigma_congr₁ [instance] {F : B → Type.{max 1 u}} [φ : A ≃ₛ B]:
-  (Σ a : A, F (to_fun B a)) ≃ₛ Σ b : B, F b :=
-  match φ with equiv.mk f g l r :=
+  (Σ a : A, F (to_fun B a)) ≃ₛ Σ b : B, F b :=  
   equiv.mk
   (λ x , ⟨ _, x.2 ⟩ )
   (λ x,  ⟨ _, (eq.symm (right_inv A B _)) ▹ x.2⟩ )
-  (λ x, begin esimp, have xs : ⟨x.1, x.2⟩ = x, from sigma.eta x, rewrite -xs,
-        apply sigma_eq_congr, refine ⟨_,_⟩, apply left_inv,
-        unfold function.right_inverse at *, unfold function.left_inverse at *,
-
-        have Heq : (l x.1 ▹ ((r (f x.1))⁻¹ ▹ x.2)) = x.2, from
+  (λ x, begin
+        cases x with [x₁, x₂],
+        cases φ with [f, g, l, r], unfold function.right_inverse at *, unfold function.left_inverse at *, esimp,
+        apply sigma_eq_congr, refine ⟨_,_⟩, apply l,        
         calc
-        (l x.1 ▹ ((r (f x.1))⁻¹ ▹ x.2))
-            = (r (f x.1))⁻¹ ▹ x.2 : apd (λ p, eq.rec x.2 (eq.symm(r (f x.1)))) (l x.1)
-        ... = ap f (l x.1)⁻¹ ▹ x.2 : proof_irrel ((r (f x.1))⁻¹) (ap f (l x.1)⁻¹)
-        ... = (l x.1)⁻¹ ▹ x.2 : naturality_subst f (l x.1)⁻¹ _
-        ... = x.2 : apd _ _,
-        apply sorry,
+        (l x₁ ▹ ((r (f x₁))⁻¹ ▹ x₂))
+            = (r (f x₁))⁻¹ ▹ x₂ : sorry -- apd (λ p, eq.rec x₂ (eq.symm(r (f x₁)))) (l x₁)
+        ... = ap f (l x₁)⁻¹ ▹ x₂ : proof_irrel ((r (f x₁))⁻¹) (ap f (l x₁)⁻¹)
+        ... = (l x₁)⁻¹ ▹ x₂ : naturality_subst f (l x₁)⁻¹ _
+        ... = x₂ : apd _ _
         end)
    begin
      unfold function.right_inverse at *, unfold function.left_inverse at *, intro x, cases x with [p₁, p₂],
-     esimp, apply sigma_eq_congr, refine ⟨_,_⟩, apply right_inv,
-     have Heq : r p₁ ▹ (r p₁)⁻¹ ▹ p₂ = p₂, from
+     cases φ with [f, g, l, r], esimp,
+     esimp, apply sigma_eq_congr, refine ⟨_,_⟩, apply r,
      calc #eq.ops r p₁ ▹ (r p₁)⁻¹ ▹ p₂
          = #eq.ops (r p₁)⁻¹ ▹ p₂ : sorry -- apd (#eq.ops λ p, eq.rec p₂ (r p₁)⁻¹) (r p₁)
-     ... = p₂ : sorry,
-   apply sorry
+     ... = p₂ : sorry   
    end
-  end
 
   definition sigma_congr₂ [instance] {F G : A → Type.{max 1 u}} [φ : Π a : A, F a ≃ₛ G a] :
     (Σ a, F a) ≃ₛ Σ a, G a :=
@@ -211,14 +197,17 @@ definition nat_unit_equiv_sigma {C : Category} {X : C ⇒ Type_category } :
   -- this equivalence helps automatically resolve some goals 
   -- using type class instances mechanism
   assert Hequiv : (Π a, object (const_funct_obj C Type_category unit) a⟶ X a) ≃ Π y, X y,
-         begin esimp, apply @pi_congr₂, intros, esimp, apply unit_arrow_equiv end,
+  begin esimp, refine equiv.mk (λ a y, a y unit.star) (λ a y x, a y) _ (λx, rfl), 
+    unfold function.left_inverse, intros, apply funext, intros, apply funext, intros, cases x_2, reflexivity,
+  end,
   apply @sigma_congr,
   
-  intros f,
-  apply @pi_congr₂, intro a, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',
-  esimp, rewrite id_right,
+  intros f,  
+  apply @pi_congr₂, intro a, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',  
+  esimp at *, rewrite id_right,
   refine equiv.mk _ _ _ _,
-  intro p,
+  have  Hequiv' : (unit → X b) ≃ X b, from unit_arrow_equiv _,
+  intro p, cases Hequiv with [ff,gg,l,r], unfold function.right_inverse at *, unfold function.left_inverse at *, esimp at *,
   
   end
 
