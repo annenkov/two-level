@@ -1,6 +1,6 @@
 import data.equiv
 
-open eq equiv eq.ops
+open equiv equiv.ops eq eq.ops
 
 -- some definitions and facts about equality and equivalence
 -- which we could find in standard library
@@ -24,16 +24,25 @@ open eq
 
 namespace equiv
 
-  definition pi_congr {A A' : Type} {B : A' → Type} (φ : equiv A A')
-    : (Π (a : A), B (φ ∙ a)) ≃ (Π (a : A'), B a) :=
+  variables {A A' : Type}
+
+  definition pi_congr₁ [instance] {F' : A'  → Type} [φ : A ≃ A']
+    : (Π (a : A), F' (φ ∙ a)) ≃ (Π (a : A'), F' a) :=
     match φ with mk f g l r :=
       mk (λ k x', r x' ▹ k (g x'))
       (λ h x, h (f x))
       (λ k, funext (λ x,
       calc  r (f x) ▹ k (g (f x))
-            = ap f (l x) ▹ k (g (f x)) : { proof_irrel (r (f x)) (ap f (l x)) }
+            = ap f (l x) ▹ k (g (f x)) : proof_irrel (r (f x)) (ap f (l x))
         ... = l x ▹ k (g (f x)) : naturality_subst f (l x) (k (g (f x)))
         ... = k x : apd k (l x)))
       (λ h, funext (λ x', apd h (r x')))
   end
+
+  definition pi_congr₂ [instance] {F G : A → Type}  [φ : Π a, F a ≃ G a]
+    : (Π (a : A), F a) ≃ (Π (a : A), G a) := equiv.mk sorry sorry sorry sorry
+
+  definition pi_congr [instance] {F : A → Type} {F' : A' → Type} [φ : A ≃ A'] [φ' : Π a, F a ≃ F' (φ ∙ a)] :=
+    equiv.trans (@pi_congr₂ _ _ _ φ') (@pi_congr₁ _ _ _ φ)
+
 end equiv

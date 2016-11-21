@@ -125,12 +125,14 @@ open - [notation] category
 
 open functor poly_unit
 
+universe variable u
+
 definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
   begin
    intros H x, rewrite H
   end
 
-definition cone_in_pretype [reducible] {J : Category.{1 1}} (D : J ⇒ Type_category) : cone D :=
+definition cone_in_pretype [reducible] {J : Category.{1 1}} (D : J ⇒ Type_category.{max 1 u}) : cone D :=
 ⟨ cone_with_tip _ poly_unit, -- (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
     (λ a L, natural_map L a star)
