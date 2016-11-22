@@ -46,6 +46,6 @@ definition lemma3 {n : ℕ} {X : fin n → Fib}
     { apply (equiv_is_fibrant (equiv.symm pi_fin0_unit_equiv)) },
     { have HeqFinSum : fin n + unit ≃ₛ fin (succ n), from (fin_sum_unit_equiv n),
       apply equiv_is_fibrant,
-        apply (pi_congr HeqFinSum),
+        apply pi_congr₁,
         apply equiv_is_fibrant, apply (equiv.symm (pi_sum_fin_unit_equiv' HeqFinSum))}
 end
