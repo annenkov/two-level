@@ -16,10 +16,9 @@ structure Pullback (f : A → C) (g : B → C):=
 definition Pullback' : Type := Σ (b : B), fibreₛ f (g b)
 
 open sigma.ops
-definition Pullback'_is_fibrant : is_fibration_alt
-  (λ (pb : Pullback' f g), pb.1)
-  := λ b, @equiv_is_fibrant _ _ (equiv.symm (fibre_projection b)) (isfib (g b))
-
+definition Pullback'_is_fibrant [instance] :
+  is_fibration_alt (λ (pb : Pullback' f g), pb.1) :=
+  λ b, @equiv_is_fibrant _ _ (equiv.symm (fibre_projection b)) (isfib (g b))
 
 -- Inspired by the implementation from HoTT Lean library
 inductive pb_cat_ob : Type :=
@@ -107,7 +106,7 @@ open poly_unit
 
 open equiv
 
-definition const_funct_unit [reducible] [unfold_full] := 
+definition const_funct_unit [reducible] [unfold_full] :=
   const_funct_obj PullbackCat Type_category poly_unit.{max 1 u}
 
 definition nat_unit_Pullback_equiv :
@@ -137,11 +136,11 @@ definition nat_unit_Pullback_equiv :
   end
 
 definition Pullback'_Pullback_equiv : Pullback' f g ≃ₛ Pullback f g:=
-  equiv.mk 
-    (λ x, begin cases x with [p₁, p₂], cases p₂ with [pp₁, pp₂], 
-                apply Pullback.mk pp₁ p₁ (g p₁) (pp₂, rfl) end) 
-    (λ x, begin cases x, cases p_law with [p₁, p₂], refine ⟨ pB, #eq.ops ⟨pA, p₁ ⬝ p₂⁻¹⟩⟩end) 
-    (λ x, begin cases x with [p₁, p₂], cases p₂ with [pp₁, pp₂], esimp end) 
+  equiv.mk
+    (λ x, begin cases x with [p₁, p₂], cases p₂ with [pp₁, pp₂],
+                apply Pullback.mk pp₁ p₁ (g p₁) (pp₂, rfl) end)
+    (λ x, begin cases x, cases p_law with [p₁, p₂], refine ⟨ pB, #eq.ops ⟨pA, p₁ ⬝ p₂⁻¹⟩⟩end)
+    (λ x, begin cases x with [p₁, p₂], cases p₂ with [pp₁, pp₂], esimp end)
     (λ x, begin cases x, cases p_law with [p₁, p₂], esimp, cases p₂, esimp end)
 
 open eq
@@ -154,14 +153,14 @@ section equiv
       begin intro p, cases p with [p₁, p₂], cases p₁, cases p₂, esimp end
 
   definition sigma_congr₁ [instance] {F : B → Type.{max 1 u}} [φ : A ≃ₛ B]:
-  (Σ a : A, F (to_fun B a)) ≃ₛ Σ b : B, F b :=  
+  (Σ a : A, F (to_fun B a)) ≃ₛ Σ b : B, F b :=
   equiv.mk
   (λ x , ⟨ _, x.2 ⟩ )
   (λ x,  ⟨ _, (eq.symm (right_inv A B _)) ▹ x.2⟩ )
   (λ x, begin
         cases x with [x₁, x₂],
         cases φ with [f, g, l, r], unfold function.right_inverse at *, unfold function.left_inverse at *, esimp,
-        apply sigma_eq_congr, refine ⟨_,_⟩, apply l,        
+        apply sigma_eq_congr, refine ⟨_,_⟩, apply l,
         calc
         (l x₁ ▹ ((r (f x₁))⁻¹ ▹ x₂))
             = (r (f x₁))⁻¹ ▹ x₂ : sorry -- apd (λ p, eq.rec x₂ (eq.symm(r (f x₁)))) (l x₁)
@@ -175,7 +174,7 @@ section equiv
      esimp, apply sigma_eq_congr, refine ⟨_,_⟩, apply r,
      calc #eq.ops r p₁ ▹ (r p₁)⁻¹ ▹ p₂
          = #eq.ops (r p₁)⁻¹ ▹ p₂ : sorry -- apd (#eq.ops λ p, eq.rec p₂ (r p₁)⁻¹) (r p₁)
-     ... = p₂ : sorry   
+     ... = p₂ : sorry
    end
 
   definition sigma_congr₂ [instance] {F G : A → Type.{max 1 u}} [φ : Π a : A, F a ≃ₛ G a] :
@@ -185,7 +184,7 @@ section equiv
   definition sigma_congr {F : A → Type} {G : B → Type}
     [φ : A ≃ₛ B] [φ' : Π a : A, F a ≃ₛ G (to_fun B a)] :
     (Σ a, F a) ≃ₛ Σ a, G a := equiv.trans sigma_congr₂ sigma_congr₁
-  
+
 end equiv
 
 open equiv
@@ -194,21 +193,21 @@ definition nat_unit_equiv_sigma {C : Category} {X : C ⇒ Type_category } :
   (const_funct_obj C Type_category unit ⟹ X) ≃ₛ Σ (c : Π y : C, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
   begin
   apply equiv.trans (nat_transf_sigma_iso),
-  -- this equivalence helps automatically resolve some goals 
+  -- this equivalence helps automatically resolve some goals
   -- using type class instances mechanism
   assert Hequiv : (Π a, object (const_funct_obj C Type_category unit) a⟶ X a) ≃ Π y, X y,
-  begin esimp, refine equiv.mk (λ a y, a y unit.star) (λ a y x, a y) _ (λx, rfl), 
+  begin esimp, refine equiv.mk (λ a y, a y unit.star) (λ a y x, a y) _ (λx, rfl),
     unfold function.left_inverse, intros, apply funext, intros, apply funext, intros, cases x_2, reflexivity,
   end,
   apply @sigma_congr,
-  
-  intros f,  
-  apply @pi_congr₂, intro a, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',  
+
+  intros f,
+  apply @pi_congr₂, intro a, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',
   esimp at *, rewrite id_right,
   refine equiv.mk _ _ _ _,
   have  Hequiv' : (unit → X b) ≃ X b, from unit_arrow_equiv _,
   intro p, cases Hequiv with [ff,gg,l,r], unfold function.right_inverse at *, unfold function.left_inverse at *, esimp at *,
-  
+
   end
 
 

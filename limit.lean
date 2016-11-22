@@ -85,8 +85,12 @@ structure has_terminal_obj [class] (C : Category) :=
   (terminal : C)
   (is_terminal_obj : is_terminal terminal)
 
+open has_terminal_obj
+
 definition limit {J C : Category} (D : J ⇒ C) : Type  := has_terminal_obj (ConeCat D)
 
+definition limit_obj [reducible] [unfold_full] {J C : Category} {D : J ⇒ C} : limit D → objects C
+  | limit_obj (has_terminal_obj.mk c _) := c.1
 
 -- binary product as a limit
 
@@ -145,7 +149,7 @@ open function
 definition natural_map_proj {C D : Category} (F G: functor C D) (η :Π a, F a ⟶ G a)
   (nat : Π⦃a b : C⦄ (f : a ⟶ b), G f ∘ η a = η b ∘ F f) : natural_map (natural_transformation.mk η nat) = η := rfl
 
-definition limit_in_pretype {J : Category.{1 1}} {D : J ⇒ Type_category} : limit D :=
+definition limit_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : limit D :=
   ⦃ has_terminal_obj _,
     terminal := cone_in_pretype D,
     is_terminal_obj :=
