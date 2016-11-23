@@ -152,7 +152,7 @@ section equiv
     (Σ (p : a = a'), ((p ▹ b) = b')) → ⟨ a, b ⟩ = ⟨a', b'⟩ :=
       begin intro p, cases p with [p₁, p₂], cases p₁, cases p₂, esimp end
 
-  definition sigma_congr₁ [instance] {F : B → Type.{max 1 u}} [φ : A ≃ₛ B]:
+  definition sigma_congr₁ [instance] {A B: Type} {F : B → Type} [φ : A ≃ₛ B]:
   (Σ a : A, F (to_fun B a)) ≃ₛ Σ b : B, F b :=
   equiv.mk
   (λ x , ⟨ _, x.2 ⟩ )
@@ -177,37 +177,55 @@ section equiv
      ... = p₂ : sorry
    end
 
-  definition sigma_congr₂ [instance] {F G : A → Type.{max 1 u}} [φ : Π a : A, F a ≃ₛ G a] :
+  definition sigma_congr₂ [instance] {A : Type} {F G : A → Type} [φ : Π a : A, F a ≃ₛ G a] :
     (Σ a, F a) ≃ₛ Σ a, G a :=
     equiv.mk sorry sorry sorry sorry
 
-  definition sigma_congr {F : A → Type} {G : B → Type}
+  definition sigma_congr {A B : Type} {F : A → Type} {G : B → Type}
     [φ : A ≃ₛ B] [φ' : Π a : A, F a ≃ₛ G (to_fun B a)] :
     (Σ a, F a) ≃ₛ Σ a, G a := equiv.trans sigma_congr₂ sigma_congr₁
 
 end equiv
 
-open equiv
+open equiv poly_unit
 
-definition nat_unit_equiv_sigma {C : Category} {X : C ⇒ Type_category } :
-  (const_funct_obj C Type_category unit ⟹ X) ≃ₛ Σ (c : Π y : C, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
+definition poly_unit_arrow_equiv [instance] [simp] (A : Type) : (poly_unit → A) ≃ A :=
+  mk (λ f, f star) (λ a, (λ u, a))
+     (λ f, funext (λ x, by cases x; reflexivity))
+     (λ u, rfl)
+
+definition to_unit [reducible] [unfold_full] {C : Category} {X : C ⇒ Type_category.{u} }
+  (f : Π a, poly_unit → X a) y := f y star
+
+definition pi_unit_arrow_equiv {C : Category} {X : C ⇒ Type_category } :
+  (Π a, object (const_funct_obj C Type_category poly_unit) a⟶ X a) ≃ Π y, X y :=
+  begin
+     esimp, refine equiv.mk to_unit (λ f y x, f y) _ (λx, rfl),
+     unfold function.left_inverse, intros, apply funext, intros, apply funext, intros, cases x_2, reflexivity
+  end
+
+open eq.ops
+
+definition nat_unit_equiv_sigma {C : Category.{1 1}} {X : C ⇒ Type_category.{max 1 u}} :
+  (const_funct_obj C Type_category poly_unit ⟹ X) ≃ₛ
+  Σ (c : Π y : C, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
   begin
   apply equiv.trans (nat_transf_sigma_iso),
-  -- this equivalence helps automatically resolve some goals
-  -- using type class instances mechanism
-  assert Hequiv : (Π a, object (const_funct_obj C Type_category unit) a⟶ X a) ≃ Π y, X y,
-  begin esimp, refine equiv.mk (λ a y, a y unit.star) (λ a y x, a y) _ (λx, rfl),
-    unfold function.left_inverse, intros, apply funext, intros, apply funext, intros, cases x_2, reflexivity,
-  end,
   apply @sigma_congr,
 
-  intros f,
-  apply @pi_congr₂, intro a, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',
+  intros ff,
+  apply @pi_congr₂, intro, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',
   esimp at *, rewrite id_right,
   refine equiv.mk _ _ _ _,
-  have  Hequiv' : (unit → X b) ≃ X b, from unit_arrow_equiv _,
-  intro p, cases Hequiv with [ff,gg,l,r], unfold function.right_inverse at *, unfold function.left_inverse at *, esimp at *,
+  apply pi_unit_arrow_equiv,
+  { intro p, apply happly p },
 
+  { intro p, esimp at *,
+   apply funext, intro x, cases x, apply p },
+
+  { unfold function.left_inverse, intro, esimp },
+
+  { unfold function.right_inverse, unfold function.left_inverse, intro p, esimp },
   end
 
 
