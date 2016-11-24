@@ -69,7 +69,21 @@ open invcat --Fib
 open functor
 
 namespace matching_object
-  
-definition matching_object {C : Category} [invcat C] (X : C ⇒ Type_category) (z : C):=
-  limit (X ∘f (forget C z))
+
+  open poly_unit
+
+  definition matching_object {C : Category.{1 1}} [invcat C] (X : C ⇒ Type_category) (z : C) :=
+    limit_obj (limit_in_pretype (X ∘f (forget C z)))
+
+  definition matching_obj_map {C : Category} [invC : invcat C] (X : C ⇒ Type_category) (z : C) : X z → matching_object X z := 
+    begin 
+      intros x, unfold matching_object, unfold forget, unfold functor.compose, 
+      refine natural_transformation.mk _ _, 
+      { intro, esimp, intro u, cases a, unfold red_coslice_obs.to_coslice_obs, apply (X hom_to x) },
+      { intros, esimp, rewrite id_right, cases f with [f_hom, tr], cases a, cases b, esimp at *, 
+        unfold red_coslice_obs.to_coslice_obs at *, rewrite -tr,
+        apply funext, intro y, cases y, esimp, apply eq.symm,
+        apply happly (respect_comp X f_hom hom_to) x }
+    end
+
 end matching_object
