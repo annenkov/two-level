@@ -81,9 +81,9 @@ definition fib_eq_is_fibrant [instance] {X : Type}[is_fibrant X](x y : X) :
 open prod
 
 namespace fib_eq
-  variables {X: Type}[is_fibrant X]
-  variables {Y: Type}[is_fibrant Y]
-  variables {Z: Type}[is_fibrant Z]
+  variables {X: Fib}
+  variables {Y: Fib}
+  variables {Z: Fib}
 
   attribute refl [refl]
   definition symm [symm] {x y : X} : x ~ y → y ~ x :=
@@ -150,9 +150,9 @@ end fib_eq
 
 open fib_eq
 
-variables {A: Type}[is_fibrant A]
-variables {B: Type}[is_fibrant B]
-variables {C: Type}[is_fibrant C]
+variables {A: Fib}
+variables {B: Fib}
+variables {C: Fib}
 
 
 structure is_contr (X : Type)[is_fibrant X] := mk ::
@@ -172,7 +172,7 @@ definition is_trunc : Π (n : ℕ)(X : Type) [is_fibrant X], Type
 definition is_prop (X : Type) [is_fibrant X] := Π (x y : X), x ~ y
 
 section truncated_types
-  variables (X : Type)[is_fibrant X]
+  variables (X : Fib)
 
   definition is_contr_is_trunc :
     is_contr X → is_trunc 1 X :=
@@ -199,7 +199,7 @@ section truncated_types
 end truncated_types
 
 section singleton
-  variables {X : Type}[is_fibrant X]
+  variables {X : Fib}
   definition singleton [reducible] (x : X) := Σ (y : X), y ~ x
   definition singleton_contr (x : X) : is_contr (singleton x) :=
     let l (y : X)(p : y ~ x) : ⟨x , refl x⟩ ~ ⟨y, p⟩ := elim !refl x p in
