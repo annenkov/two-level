@@ -206,7 +206,7 @@ definition pi_unit_arrow_equiv {C : Category} {X : C ⇒ Type_category } :
 
 open eq.ops
 
-definition nat_unit_equiv_sigma {C : Category.{1 1}} {X : C ⇒ Type_category.{max 1 u}} :
+definition nat_unit_sigma_equiv {C : Category.{1 1}} {X : C ⇒ Type_category.{max 1 u}} :
   (const_funct_obj C Type_category poly_unit ⟹ X) ≃ₛ
   Σ (c : Π y : C, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
   begin
