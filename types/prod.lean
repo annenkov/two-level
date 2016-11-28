@@ -4,10 +4,10 @@ open prod prod.ops
 open fib_eq
 
 -- TODO: think about the namespace name
-namespace hprod 
+namespace hprod
 
-  variables {A: Type} [is_fibrant A]
-  variables {B: Type} [is_fibrant B]
+  variables {A : Fib}
+  variables {B : Fib}
   variables {u v w : A × B} {a a' : A} {b b' : B}
 
   protected definition eta [unfold 3] (u : A × B) : (pr₁ u, pr₂ u) ~ u :=
@@ -18,7 +18,7 @@ namespace hprod
 
   definition pair_eq' (pa : a ~ a') (pb : b ~ b') : (a, b) ~ (a', b') :=
   ap₂ (λ x y, (x,y)) pa pb
-  
+
   definition prod_eq' (H₁ : u.1 ~ v.1) (H₂ : u.2 ~ v.2) : u ~ v :=
   by cases u; cases v; exact pair_eq' H₁ H₂
 
@@ -35,7 +35,7 @@ namespace hprod
     postfix `..1`:(max+1) := eq_pr1
     postfix `..2`:(max+1) := eq_pr2
   end ops
-  
+
   open ops
 
   protected definition ap_pr1 (p : u ~ v) : ap pr1 p ~ p..1 := idp
@@ -44,5 +44,5 @@ namespace hprod
   -- FIXME: simplification needed before applying idp, because definitions of ap, prod_eq etc don't compute
   -- definition pair_prod_eq (p : u.1 ~ v.1) (q : u.2 ~ v.2) : ((prod_eq p q)..1, (prod_eq p q)..2) ~ (p, q) :=
   -- by induction u; induction v; esimp at *; induction p using elim; induction q using elim; state; apply idp
-  
+
 end hprod

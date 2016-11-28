@@ -208,7 +208,7 @@ open eq.ops
 
 definition nat_unit_sigma_equiv {C : Category.{1 1}} {X : C ⇒ Type_category.{max 1 u}} :
   (const_funct_obj C Type_category poly_unit ⟹ X) ≃ₛ
-  Σ (c : Π y : C, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
+  Σ (c : Π y, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
   begin
   apply equiv.trans (nat_transf_sigma_iso),
   apply @sigma_congr,

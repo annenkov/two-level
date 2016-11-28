@@ -3,7 +3,7 @@ import data.equiv
 open equiv equiv.ops eq eq.ops
 
 -- some definitions and facts about equality and equivalence
--- which we could find in standard library
+-- which we could not find in standard library
 
 namespace eq
 
