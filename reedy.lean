@@ -43,7 +43,17 @@ section reedy
 
   open nat fin subcat_obj
     
-  definition C_without_z (C : Category) (z : C) : Category := Mk (subcat C (λ c, c ≠ z))
+  definition C_without_z (z : C) : Category := Mk (subcat C (λ c, c ≠ z))
+  
+  
+  -- (Danil) I have to use apply tactic, as it allows to infer correct implicits
+  definition Functor_from_C' (z : C) (X : C ⇒ Type_category) : C_without_z z ⇒ Type_category :=
+  ⦃ functor,
+    object := λ ob, X (obj ob),
+    morphism := λ a b f, by apply X f,
+    respect_id := λ a, by apply respect_id X (obj a),
+    respect_comp := λ a b c g f, by apply @respect_comp _ _ X (obj a) (obj b) (obj c) _ _
+  ⦄
 
   definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant.{u} X) :
     is_fibrant (cone_with_tip X poly_unit) :=
@@ -57,17 +67,24 @@ section reedy
         cases H with [z, z_max],
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
-        have invC' : invcat (C_without_z C z), from sorry,
-        have finC' : is_finite (C_without_z C z), from sorry,
+        have invC' : invcat (C_without_z z), from sorry,
+        have finC' : is_finite (C_without_z z), from sorry,
 
         -- using equivalences
         apply equiv_is_fibrant,
         apply (equiv.symm nat_unit_sigma_equiv.{u}),        
         have 
-        let C' := (C_without_z C z) in 
+        Hequiv : let C' := (C_without_z z) in 
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y') ≃
          (Σ (c_z : X z) (c : (Π y : C', X y)), (Π (y : C') (f : z ⟶ y ), X f c_z = c y) ×
          (Π (y y' : C') (f : y ⟶ y'), X f (c y) = c y')), from sorry,
+                
+        -- have PullbackEquiv : 
+        --   let L := cone_with_tip (Functor_from_C' z X) poly_unit,
+        --       p := sorry,
+        --       q := sorry
+        --   in
+        --      (Σ (c_z : X z) (d : L), p d  = q c_z) ≃ₛ ... , from sorry,
         apply sorry }
     end
 end reedy
