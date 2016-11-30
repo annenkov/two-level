@@ -45,15 +45,40 @@ section reedy
     
   definition C_without_z (z : C) : Category := Mk (subcat C (λ c, c ≠ z))
   
-  
   -- (Danil) I have to use apply tactic, as it allows to infer correct implicits
-  definition Functor_from_C' (z : C) (X : C ⇒ Type_category) : C_without_z z ⇒ Type_category :=
+  definition Functor_from_C' [reducible] [unfold_full] (z : C) (X : C ⇒ Type_category) : C_without_z z ⇒ Type_category :=
   ⦃ functor,
     object := λ ob, X (obj ob),
     morphism := λ a b f, by apply X f,
     respect_id := λ a, by apply respect_id X (obj a),
     respect_comp := λ a b c g f, by apply @respect_comp _ _ X (obj a) (obj b) (obj c) _ _
   ⦄
+  
+  open prod.ops poly_unit
+  open reduced_coslice
+  open reduced_coslice.red_coslice_obs
+
+  -- for any object "a" from z//C (which is an arrow z⟶y with extra property) we show that codomain y cannot be z
+  -- we show it using definition of reduced coslice and fact that C is an inverse category
+  definition reduced_coslice_ne (z : C) (a : z//C) [invC : invcat C] : to a ≠ z :=
+  begin
+    cases a with [y, c_hom_to, f_not_id], esimp at *,
+    intro p, cases p,
+    apply f_not_id rfl,
+    cases invC, cases id_reflect_ℕop,
+    apply (id_reflect c_hom_to rfl).2
+  end
+  
+  -- map from limit of X restricted to C'
+  definition map_L_to_Mz (z : C) (X : C ⇒ Type_category) [invC : invcat C] 
+    (L : cone_with_tip (Functor_from_C' z X) poly_unit) : matching_object X z :=  
+      match L with
+      | natural_transformation.mk η NatSq :=
+      -- refine allows to infer implicit argument for application of NatSq
+      by refine natural_transformation.mk 
+        (λ a u, η (mk (to a) (reduced_coslice_ne z a)) poly_unit.star) 
+        (λ a b f, funext (λ u, happly (NatSq f.1) star))
+  end
 
   definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant.{u} X) :
     is_fibrant (cone_with_tip X poly_unit) :=
