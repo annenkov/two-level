@@ -36,23 +36,38 @@ open equiv equiv.ops
 
 section reedy
   universe variable u
-  variables {C : Category.{1 1}}
+  variables {C : Category.{1 1}} 
+            {D : Category}
 
-  definition is_reedy_fibrant (X : C ⇒ Type_category.{max 1 u}) [invcat C] := Π z,
-    is_fibration_alt (matching_obj_map.{u} X z)
+  definition is_reedy_fibrant (X : C ⇒ Type_category.{max 1 u}) [invcat C] := 
+    Π z, is_fibration_alt (matching_obj_map.{u} X z)
 
   open nat fin subcat_obj
 
   definition C_without_z (z : C) : Category := Mk (subcat C (λ c, c ≠ z))
 
   -- (Danil) I have to use apply tactic, as it allows to infer correct implicits
-  definition Functor_from_C' [reducible] [unfold_full] (z : C) (X : C ⇒ Type_category) : C_without_z z ⇒ Type_category :=
+  definition Functor_from_C' [reducible] [unfold_full] (z : C) (X : C ⇒ D) : C_without_z z ⇒ D :=
   ⦃ functor,
     object := λ ob, X (obj ob),
     morphism := λ a b f, by apply X f,
     respect_id := λ a, by apply respect_id X (obj a),
     respect_comp := λ a b c g f, by apply @respect_comp _ _ X (obj a) (obj b) (obj c) _ _
   ⦄
+  set_option pp.binder_types true
+  open eq.ops
+  definition C_without_z_invcat (z : C) [invC : invcat C]: invcat (C_without_z z) :=
+    begin
+      unfold C_without_z, cases invC, cases id_reflect_ℕop,
+      refine invcat.mk (has_idreflect.mk _ _), apply Functor_from_C' z φ, intros,
+      cases id_reflect f a with [p1, p2], 
+      refine ⟨_,_⟩, 
+      { cases x, cases y, congruence, apply p1 },
+      { cases x, cases y, esimp at *, induction p1 using eq.drec, esimp at *, apply p2}
+    end
+
+  -- definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invcat C] {rfibX : is_reedy_fibrant X} 
+  --   : is_reedy_fibrant (Functor_from_C' z X)  := sorry
 
   open poly_unit
   open reduced_coslice
@@ -112,7 +127,7 @@ section reedy
         cases H with [z, z_max],
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
-        have invC' : invcat (C_without_z z), from sorry,
+        have invC' : invcat (C_without_z z), from C_without_z_invcat z,
         have finC' : C_without_z z ≃ₛ fin n', from sorry,        
 
         -- using equivalences
