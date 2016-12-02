@@ -4,13 +4,13 @@ import inverse limit fibrant
 open sigma category eq.ops
 
 namespace reduced_coslice
-  structure coslice_obs {ob : Type} (C : category ob) (a : ob) := 
+  structure coslice_obs {ob : Type} (C : category ob) (a : ob) :=
   (to  : ob)
   (hom_to : hom a to)
 
   open coslice_obs
 
-  structure red_coslice_obs {A : Type} (C : category A) (c : A) extends coslice_obs C c :=   
+  structure red_coslice_obs {A : Type} (C : category A) (c : A) extends coslice_obs C c :=
   (rc_non_id_hom : Π (p : c = to), not (p ▹ hom_to = category.id))
 
 
@@ -21,7 +21,7 @@ namespace reduced_coslice
   definition reduced_coslice {ob : Type} (C : category ob) (c : ob) : category (red_coslice_obs C c) :=
     ⦃ category,
       hom := λa b, Σ(g : hom (to a) (to b)), g ∘ hom_to a = hom_to b,
-      comp := λ a b c g f, 
+      comp := λ a b c g f,
         ⟨ (pr1 g ∘ pr1 f),
           (show (pr1 g ∘ pr1 f) ∘ hom_to a = hom_to c,
             proof
@@ -41,7 +41,7 @@ namespace reduced_coslice
 
   open functor
 
-  definition forget (C : Category) (c : C) : (c // C) ⇒ C := 
+  definition forget (C : Category) (c : C) : (c // C) ⇒ C :=
     ⦃ functor,
       object := λ a, to a,
       morphism := λ a b f, pr1 f,
@@ -56,7 +56,7 @@ open invcat --Fib
 -- -- TODO: definition is exactly the same as for type_category
 -- -- should be some way to avoid code repetition
 -- definition fib_category : category Fib :=
---   ⦃ category, 
+--   ⦃ category,
 --     hom := λ a b, pretype a → pretype b,
 --     comp := λ a b c, function.comp ,
 --     ID := _,
@@ -64,26 +64,25 @@ open invcat --Fib
 --     id_left := λ a b f,  function.comp.left_id f,
 --     id_right := λ a b f, function.comp.right_id f ⦄
 
--- definition FibCat := Mk fib_category 
+-- definition FibCat := Mk fib_category
 
 open functor
 
 namespace matching_object
 
-  open poly_unit
+  open poly_unit reduced_coslice.red_coslice_obs reduced_coslice.coslice_obs
 
   definition matching_object {C : Category.{1 1}} [invcat C] (X : C ⇒ Type_category) (z : C) :=
     limit_obj (limit_in_pretype (X ∘f (forget C z)))
 
-  definition matching_obj_map {C : Category} [invC : invcat C] (X : C ⇒ Type_category) (z : C) : X z → matching_object X z := 
-    begin 
-      intros x, unfold matching_object, unfold forget, unfold functor.compose, 
-      refine natural_transformation.mk _ _, 
-      { intro, esimp, intro u, cases a, unfold red_coslice_obs.to_coslice_obs, apply (X hom_to x) },
-      { intros, esimp, rewrite id_right, cases f with [f_hom, tr], cases a, cases b, esimp at *, 
+  definition matching_obj_map {C : Category} [invC : invcat C] (X : C ⇒ Type_category) (z : C) : X z → matching_object X z :=
+    begin
+      intros x, unfold matching_object, unfold forget, unfold functor.compose,
+      refine natural_transformation.mk (λ a u, X (hom_to a) x) _,
+      { intros, esimp, rewrite id_right, cases f with [f_hom, tr], apply funext, intro y,
+        esimp at *,
         unfold red_coslice_obs.to_coslice_obs at *, rewrite -tr,
-        apply funext, intro y, cases y, esimp, apply eq.symm,
-        apply happly (respect_comp X f_hom hom_to) x }
+        apply eq.symm, apply happly (respect_comp X f_hom (hom_to a)) x }
     end
 
 end matching_object
