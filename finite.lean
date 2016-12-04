@@ -1,4 +1,4 @@
-import fibrant data.fin data.equiv facts
+import fibrant data.fin data.equiv facts algebra.category
 
 open nat equiv function fin eq.ops sum unit prod.ops
 
@@ -49,3 +49,26 @@ definition lemma3 {n : ℕ} {X : fin n → Fib}
         apply pi_congr₁,
         apply equiv_is_fibrant, apply (equiv.symm (pi_sum_fin_unit_equiv' HeqFinSum))}
 end
+
+-- some facts about (essentially) finite catrgories
+
+namespace fincat
+  variables {C : Category}
+  open category
+
+  definition is_finite [class] (C : Category) := Σ n, C ≃ fin n
+
+  definition lift_down {n : ℕ} (i : fin (succ n)) (Hne : i ≠ maxi) : fin n := fin.mk (val i) (lt_max_of_ne_max Hne)
+  
+  definition lift_succ_lift_down_inverse {n : ℕ} {i : fin (succ n)} {Hne : i ≠ maxi} : 
+    (lift_succ (lift_down i Hne)) = i :=
+    begin cases i, esimp end
+
+  definition fincat_ne_maxi {n : ℕ} {z : C} {f : C → fin (succ n)} (inj_f : injective f)
+    (max_z : f z = maxi) {o : C} (p : o ≠ z) : f o ≠ (maxi : fin (succ n)) :=
+    begin 
+      unfold ne, unfold not, intro,
+      apply p, rewrite -max_z at a, apply inj_f a
+  end
+
+end fincat

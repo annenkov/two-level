@@ -1,6 +1,6 @@
-import fibrant matching inverse algebra.category limit fibrantlimits data.fin
+import fibrant matching inverse algebra.category limit fibrantlimits data.fin finite
 
-open invcat category functor matching_object Fib sigma.ops
+open invcat category functor matching_object Fib sigma.ops fincat
 
 definition fib_category : category Fib :=
   ⦃ category,
@@ -12,8 +12,6 @@ definition fib_category : category Fib :=
     id_right := λ a b f, function.comp.right_id f ⦄
 
 definition FibCat := Mk fib_category
-
-definition is_finite [class] (C : Category) := Σ n, C ≃ₛ fin n
 
 structure subcat_obj (C : Category) (p : objects C → Prop) :=
   (obj : objects C)
@@ -36,10 +34,10 @@ open equiv equiv.ops
 
 section reedy
   universe variable u
-  variables {C : Category.{1 1}} 
+  variables {C : Category.{1 1}}
             {D : Category}
 
-  definition is_reedy_fibrant (X : C ⇒ Type_category.{max 1 u}) [invcat C] := 
+  definition is_reedy_fibrant [class] (X : C ⇒ Type_category.{max 1 u}) [invcat C] :=
     Π z, is_fibration_alt (matching_obj_map.{u} X z)
 
   open nat fin subcat_obj
@@ -54,20 +52,54 @@ section reedy
     respect_id := λ a, by apply respect_id X (obj a),
     respect_comp := λ a b c g f, by apply @respect_comp _ _ X (obj a) (obj b) (obj c) _ _
   ⦄
-  set_option pp.binder_types true
-  open eq.ops
-  definition C_without_z_invcat (z : C) [invC : invcat C]: invcat (C_without_z z) :=
+
+  open eq.ops function
+  definition C_without_z_invcat [instance] (z : C) [invC : invcat C]: invcat (C_without_z z) :=
     begin
       unfold C_without_z, cases invC, cases id_reflect_ℕop,
       refine invcat.mk (has_idreflect.mk _ _), apply Functor_from_C' z φ, intros,
-      cases id_reflect f a with [p1, p2], 
-      refine ⟨_,_⟩, 
+      cases id_reflect f a with [p1, p2],
+      refine ⟨_,_⟩,
       { cases x, cases y, congruence, apply p1 },
       { cases x, cases y, esimp at *, induction p1 using eq.drec, esimp at *, apply p2}
     end
 
-  -- definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invcat C] {rfibX : is_reedy_fibrant X} 
-  --   : is_reedy_fibrant (Functor_from_C' z X)  := sorry
+  definition C_without_z_is_finite [instance] {n : ℕ} (z : C) [φ : objects C ≃ₛ fin (succ n)]
+    {max_z : to_fun (fin (succ n)) z = maxi} : objects (C_without_z z) ≃ₛ fin n :=
+    begin
+      unfold C_without_z,
+      cases φ with [f, g, l, r], esimp at *,
+      have inj_f : injective f, from (injective_of_left_inverse l),
+      unfold function.right_inverse at *, unfold function.left_inverse at *,
+      refine equiv.mk _ _ _ _,
+      { intro a, cases a with [c, p], esimp at *,
+        have ne_maxi :  f c ≠ maxi, by refine (fincat_ne_maxi inj_f max_z p),
+        apply lift_down (f c) ne_maxi },
+      { intro i, unfold Mk, refine subcat_obj.mk (g (lift_succ i)) _, unfold ne, unfold not, intro, rewrite -a at max_z,
+        rewrite r at max_z, apply lift_succ_ne_max, assumption },
+      { unfold function.left_inverse, intro, esimp, cases x with [c, p], congruence, esimp,
+        have ne_maxi :  f c ≠ maxi, by refine (fincat_ne_maxi inj_f max_z p),
+        rewrite lift_succ_lift_down_inverse, rewrite l },
+      { unfold function.right_inverse, unfold function.left_inverse, intro, esimp,
+        unfold lift_down, cases x, congruence, rewrite r}
+    end
+
+  definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invcat C] [rfibX : is_reedy_fibrant X]
+    : is_reedy_fibrant (Functor_from_C' z X)  :=
+      begin
+        --cases rfibX,
+        unfold is_reedy_fibrant at *, intro x,
+        unfold is_fibration_alt at *, intro b,
+        assert MO : matching_object X (obj x),
+        begin
+        apply sorry
+        -- cases b with [η, NatSq],
+        -- refine natural_transformation.mk _ _, intro o, esimp at *,
+        end,
+        assert MO_map : X x → matching_object X (obj x), begin apply sorry end,
+        unfold fibreₛ, apply sorry
+        --apply rfibX x MO,
+      end
 
   open poly_unit
   open reduced_coslice
@@ -95,19 +127,19 @@ section reedy
         (λ a b f, funext (λ u, happly (NatSq f.1) star))
   end
 
-  definition singleton_contr_fiberₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E := 
-  begin 
+  definition singleton_contr_fiberₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E :=
+  begin
   refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
-  unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22], 
+  unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22],
   esimp, induction p22 using eq.drec, congruence
   end
 
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) (isfibr_p : is_fibration_alt p ):
     is_fibrant E :=
-    begin 
+    begin
       unfold is_fibration_alt at *, unfold fibreₛ at *,
       apply equiv_is_fibrant, apply singleton_contr_fiberₛ,
-      have H : is_fibrant (Σ b, Σ x, p x = b), from _, apply H      
+      have H : is_fibrant (Σ b, Σ x, p x = b), from _, apply H
     end
 
   notation `Nat` `(` F `,` G `)` := F ⟹ G
@@ -128,26 +160,26 @@ section reedy
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
         have invC' : invcat (C_without_z z), from C_without_z_invcat z,
-        have finC' : C_without_z z ≃ₛ fin n', from sorry,        
+        have finC' : C_without_z z ≃ₛ fin n', from @C_without_z_is_finite _ _ _ _ z_max,
 
         -- using equivalences
         apply equiv_is_fibrant,
         apply (equiv.symm nat_unit_sigma_equiv.{u}),
-        have Hq : Σ (q : X z → matching_object X z), is_fibration_alt q, 
+        have Hq : Σ (q : X z → matching_object X z), is_fibration_alt q,
                   from ⟨matching_obj_map X z, rfib z⟩, cases Hq with [q, fibration_q],
-        have Hp : Σ (p : Nat(𝟙, Functor_from_C' z X) → matching_object X z), p = map_L_to_Mz z X, 
-                  from ⟨map_L_to_Mz z X, rfl⟩, cases Hp with [p, p_eq],        
+        have Hp : Σ (p : Nat(𝟙, Functor_from_C' z X) → matching_object X z), p = map_L_to_Mz z X,
+                  from ⟨map_L_to_Mz z X, rfl⟩, cases Hp with [p, p_eq],
         apply equiv_is_fibrant, apply equiv.symm,
-        
+
         calc
-         (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y') 
+         (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
                 (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) : sorry
          ... ≃ₛ (Σ (d : Nat(𝟙,Functor_from_C' z X)) (c_z : X z), q c_z = p d) : sorry,
-        
+
         have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from sorry,
         assert isFibL: is_fibrant Nat(𝟙,Functor_from_C' z X), begin apply IHn, apply rfibX', apply finC' end,
-        refine @fibration_domain_is_fibrant _ (mk _ isFibL) (λpb, pb.1) _, refine Pullback'_is_fibrant.{u} q p, apply fibration_q 
+        refine @fibration_domain_is_fibrant _ (mk _ isFibL) (λpb, pb.1) _, refine Pullback'_is_fibrant.{u} q p, apply fibration_q
       }
     end
 end reedy
