@@ -96,6 +96,7 @@ section reedy
         -- cases b with [η, NatSq],
         -- refine natural_transformation.mk _ _, intro o, esimp at *,
         end,
+        assert isfibX' : is_fibrant (fibreₛ (matching_obj_map X (obj x)) MO), begin apply (rfibX x MO) end,
         assert MO_map : X x → matching_object X (obj x), begin apply sorry end,
         unfold fibreₛ, apply sorry
         --apply rfibX x MO,
@@ -134,13 +135,8 @@ section reedy
   esimp, induction p22 using eq.drec, congruence
   end
 
-  definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) (isfibr_p : is_fibration_alt p ):
-    is_fibrant E :=
-    begin
-      unfold is_fibration_alt at *, unfold fibreₛ at *,
-      apply equiv_is_fibrant, apply singleton_contr_fiberₛ,
-      have H : is_fibrant (Σ b, Σ x, p x = b), from _, apply H
-    end
+  definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
+    is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
 
   notation `Nat` `(` F `,` G `)` := F ⟹ G
   definition one_funct {C : Category} := const_funct_obj C Type_category poly_unit
@@ -175,11 +171,18 @@ section reedy
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
                 (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) : sorry
+
+         -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
+         -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
+         ... ≃ₛ (Σ (c_z : X z) (d : Nat(𝟙,Functor_from_C' z X)), p d = q c_z) : sorry
          ... ≃ₛ (Σ (d : Nat(𝟙,Functor_from_C' z X)) (c_z : X z), q c_z = p d) : sorry,
 
+        -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
+        -- that L is fibrant (from IH)
         have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from sorry,
         assert isFibL: is_fibrant Nat(𝟙,Functor_from_C' z X), begin apply IHn, apply rfibX', apply finC' end,
-        refine @fibration_domain_is_fibrant _ (mk _ isFibL) (λpb, pb.1) _, refine Pullback'_is_fibrant.{u} q p, apply fibration_q
+        refine @fibration_domain_is_fibrant _ (mk _ isFibL) (λpb, pb.1) _,
+        refine Pullback'_is_fibrant.{u} q p, apply fibration_q
       }
     end
 end reedy

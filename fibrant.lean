@@ -235,7 +235,7 @@ end fib_equivalences
 definition Univalence := Π {X Y : Fib}, is_fib_equiv (@coerce_fib_equiv X Y)
 
 
-definition fibreₛ {X Y : Type} (f : X → Y) (y : Y) := Σ (x : X), f x = y
+definition fibreₛ [reducible] {X Y : Type} (f : X → Y) (y : Y) := Σ (x : X), f x = y
 
 open sigma.ops
 
@@ -255,7 +255,7 @@ definition fibre_projection {X : Type}{Y : X → Type}(x : X)
 definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
   Σ (F : B → Fib.{u}), Π (b : B), F b ≃ₛ fibreₛ p b
 
-definition is_fibration_alt {E B : Type} (p : E → B) :=
+definition is_fibration_alt [reducible] {E B : Type} (p : E → B) :=
   Π (b : B), is_fibrant (fibreₛ p b)
 
 

@@ -50,7 +50,7 @@ definition lemma3 {n : ℕ} {X : fin n → Fib}
         apply equiv_is_fibrant, apply (equiv.symm (pi_sum_fin_unit_equiv' HeqFinSum))}
 end
 
--- some facts about (essentially) finite catrgories
+-- some facts about (essentially) finite categories
 
 namespace fincat
   variables {C : Category}
