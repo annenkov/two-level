@@ -75,7 +75,7 @@ section reedy
       { intro a, cases a with [c, p], esimp at *,
         have ne_maxi :  f c ≠ maxi, by refine (fincat_ne_maxi inj_f max_z p),
         apply lift_down (f c) ne_maxi },
-      { intro i, unfold Mk, refine subcat_obj.mk (g (lift_succ i)) _, unfold ne, unfold not, intro, rewrite -a at max_z,
+      { intro i, unfold Mk, refine subcat_obj.mk (g (lift_succ i)) _, unfold ne, unfold not, intro a, rewrite -a at max_z,
         rewrite r at max_z, apply lift_succ_ne_max, assumption },
       { unfold function.left_inverse, intro, esimp, cases x with [c, p], congruence, esimp,
         have ne_maxi :  f c ≠ maxi, by refine (fincat_ne_maxi inj_f max_z p),
@@ -151,7 +151,7 @@ section reedy
       { apply sorry},
       { intros C X invC rfib φ, esimp,
         -- choosing maximal element
-        have H : Σ z, φ ∙ z = maxi, from ⟨inv_fun C maxi, right_inv _ _ _⟩,
+        have H : Σ z, @to_fun _ (fin (succ n')) φ z = maxi, from ⟨inv_fun C maxi, right_inv _ _ _⟩,
         cases H with [z, z_max],
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
@@ -170,7 +170,12 @@ section reedy
         calc
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
-                (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) : sorry
+                (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) :
+                begin refine equiv.mk _ _ sorry sorry,
+                { intro, cases a with [p1, p2], refine ⟨p1 z, ⟨λ y, p1 y,(λ y' f, p2 z y' f, λ y y' f, p2 y y' f)⟩⟩ },
+                { intro, cases a with [p1, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
+                refine p2 (mk y'' sorry), apply sorry},
+                end
 
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
