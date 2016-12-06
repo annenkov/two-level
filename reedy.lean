@@ -173,8 +173,13 @@ section reedy
                 (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) :
                 begin refine equiv.mk _ _ sorry sorry,
                 { intro, cases a with [p1, p2], refine ⟨p1 z, ⟨λ y, p1 y,(λ y' f, p2 z y' f, λ y y' f, p2 y y' f)⟩⟩ },
-                { intro, cases a with [p1, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
-                refine p2 (mk y'' sorry), apply sorry},
+                { intro, cases a with [c_z, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
+                  have Heq : decidable (y'' = z), from @fincat.has_decidable_eq _ (⟨_,φ⟩) _ _,                  
+                  cases Heq with [y_eq_z, y_ne_z],
+                  { rewrite y_eq_z, assumption },
+                  { refine p2 (mk y'' _), assumption },
+                  intros, cases @fincat.has_decidable_eq C (⟨_,φ⟩) y z, cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z, esimp:
+                  cases a: cases a_1: esimp: apply sorry, apply sorry, apply sorry },
                 end
 
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
