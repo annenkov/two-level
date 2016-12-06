@@ -1,5 +1,7 @@
 import fibrant limit data.equiv algebra.category facts
 
+open function
+
 section pullback
 
 universe variable u

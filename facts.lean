@@ -46,3 +46,10 @@ namespace equiv
     equiv.trans (@pi_congr₂ _ _ _ φ') (@pi_congr₁ _ _ _ φ)
 
 end equiv
+
+namespace function
+  definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
+    begin
+      intros H x, rewrite H
+    end
+end function

@@ -1,7 +1,7 @@
-import algebra.category
+import algebra.category facts
 
 open natural_transformation sigma.ops
-open category
+open category function
 
 
 -- Given categories J and C, we have a canonical functor [const_funct] from the category C to the functor category C^J.
@@ -130,11 +130,6 @@ open - [notation] category
 open functor poly_unit
 
 universe variable u
-
-definition happly {A B : Type} {f g : A → B} : f = g -> ∀ x, f x = g x :=
-  begin
-   intros H x, rewrite H
-  end
 
 definition cone_in_pretype [reducible] {J : Category.{1 1}} (D : J ⇒ Type_category.{max 1 u}) : cone D :=
 ⟨ cone_with_tip _ poly_unit, -- (const_funct_obj _ _ unit) ⟹ D ,

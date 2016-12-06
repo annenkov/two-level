@@ -1,6 +1,6 @@
 import fibrant data.fin data.equiv facts algebra.category
 
-open nat equiv function fin eq.ops sum unit prod.ops
+open nat equiv function fin eq.ops sum unit prod.ops function
 
 -- facts about type family indexed by strict finite type
 
@@ -53,22 +53,42 @@ end
 -- some facts about (essentially) finite categories
 
 namespace fincat
-  variables {C : Category}
-  open category
+  universe variables u v
+  variables {C C' : Category.{u v}}
+  open category sigma.ops eq
 
   definition is_finite [class] (C : Category) := Σ n, C ≃ fin n
+  definition is_finite_eq [finC : is_finite C] := finC.2
+
+  attribute is_finite_eq [instance]
 
   definition lift_down {n : ℕ} (i : fin (succ n)) (Hne : i ≠ maxi) : fin n := fin.mk (val i) (lt_max_of_ne_max Hne)
-  
-  definition lift_succ_lift_down_inverse {n : ℕ} {i : fin (succ n)} {Hne : i ≠ maxi} : 
+
+  definition lift_succ_lift_down_inverse {n : ℕ} {i : fin (succ n)} {Hne : i ≠ maxi} :
     (lift_succ (lift_down i Hne)) = i :=
     begin cases i, esimp end
 
   definition fincat_ne_maxi {n : ℕ} {z : C} {f : C → fin (succ n)} (inj_f : injective f)
     (max_z : f z = maxi) {o : C} (p : o ≠ z) : f o ≠ (maxi : fin (succ n)) :=
-    begin 
+    begin
       unfold ne, unfold not, intro,
       apply p, rewrite -max_z at a, apply inj_f a
   end
 
+  definition eq_of_finN_eq [finC : is_finite C] {c c' : C} : c = c' → to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' :=
+    begin
+      intro Heq, cases finC with [n, φ], esimp, apply (ap _ Heq)
+    end
+
+  definition finN_eq_of_eq [finC : is_finite C] {c c' : C} : to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' → c = c' :=
+    begin
+      intro Heq, cases finC with [n, φ], cases φ with [f,g,l,r], esimp at *,
+      apply (injective_of_left_inverse l), apply Heq
+    end
+
+  definition eq_iff_finN_eq [finC : is_finite C] {c c' : C} :
+    to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' ↔ c = c' := iff.intro finN_eq_of_eq eq_of_finN_eq
+
+  definition has_decidable_eq [instance] [finC : is_finite C] {c c' : C} : decidable (c = c') :=
+    decidable_of_decidable_of_iff (fin.has_decidable_eq _ _ _) eq_iff_finN_eq
 end fincat
