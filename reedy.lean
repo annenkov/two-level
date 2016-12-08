@@ -54,7 +54,7 @@ section reedy
   ⦄
 
   open eq.ops function
-  definition C_without_z_invcat [instance] (z : C) [invC : invcat C]: invcat (C_without_z z) :=
+  definition C_without_z_invcat [instance] (z : C) [invC : invcat C] : invcat (C_without_z z) :=
     begin
       unfold C_without_z, cases invC, cases id_reflect_ℕop,
       refine invcat.mk (has_idreflect.mk _ _), apply Functor_from_C' z φ, intros,
@@ -82,6 +82,16 @@ section reedy
         rewrite lift_succ_lift_down_inverse, rewrite l },
       { unfold function.right_inverse, unfold function.left_inverse, intro, esimp,
         unfold lift_down, cases x, congruence, rewrite r}
+    end
+
+  definition no_incoming_non_id_arrows {n : ℕ} (z : C) {y : C} [φ : objects C ≃ₛ fin (nat.succ n)] [invC : invcat C]
+    {max_z : to_fun (fin (nat.succ n)) z = maxi} : ¬ ∃ (f : y ⟶ z), y ≠ z :=
+    begin cases invC, cases id_reflect_ℕop with [ψ, id_r], intro H, cases H with [f, p],
+    assert H : to_fun (fin (succ n)) y ≠ to_fun (fin (succ n)) z,
+      begin intro, apply p, apply injective_of_left_inverse (left_inv _ _), assumption end,
+      rewrite max_z at H,
+      have H' : to_fun (fin (succ n)) y < n, from lt_max_of_ne_max H,
+      apply sorry
     end
 
   definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invcat C] [rfibX : is_reedy_fibrant X]
@@ -171,15 +181,29 @@ section reedy
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
                 (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) :
-                begin refine equiv.mk _ _ sorry sorry,
+                begin refine equiv.mk _ _ _ _,
                 { intro, cases a with [p1, p2], refine ⟨p1 z, ⟨λ y, p1 y,(λ y' f, p2 z y' f, λ y y' f, p2 y y' f)⟩⟩ },
                 { intro, cases a with [c_z, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
-                  have Heq : decidable (y'' = z), from @fincat.has_decidable_eq _ (⟨_,φ⟩) _ _,                  
+                  have Heq : decidable (y'' = z), from @fincat.has_decidable_eq _ (⟨_,φ⟩) _ _,
                   cases Heq with [y_eq_z, y_ne_z],
                   { rewrite y_eq_z, assumption },
                   { refine p2 (mk y'' _), assumption },
-                  intros, cases @fincat.has_decidable_eq C (⟨_,φ⟩) y z, cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z, esimp:
-                  cases a: cases a_1: esimp: apply sorry, apply sorry, apply sorry },
+                  intros,
+                  -- now, we have 4 cases to consider: y=z, y≠z, y'=z, y'≠z
+                  cases @fincat.has_decidable_eq C (⟨_,φ⟩) y  z with [y_eq_z, y_ne_z]:
+                  cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z with [y'_eq_z, y'_ne_z],
+                  { cases y_eq_z, cases y'_eq_z, esimp, rewrite (endomorphism_is_id f), rewrite respect_id },
+                  { cases y_eq_z, esimp, apply l_z},
+                  { cases y'_eq_z, esimp, exfalso, apply (@no_incoming_non_id_arrows _ n' z y φ), assumption, existsi f, assumption },
+                  { esimp, apply l_y },
+                },
+                { unfold left_inverse, esimp, intros, cases x with [x, H], esimp, congruence, apply funext, intro y,
+                cases @fincat.has_decidable_eq C (⟨_,φ⟩) y  z with [y_eq_z, y_ne_z], {cases y_eq_z, esimp}, {esimp}},
+                { unfold right_inverse, unfold left_inverse, esimp, intro y, cases y with [c_z, Hs],
+                esimp, cases Hs with [p1, p2], esimp, cases p2, esimp,
+                cases (@has_decidable_eq C ⟨succ n', φ⟩ z z), esimp, congruence, apply sigma_eq_congr, apply sorry, apply sorry
+                --refine ⟨_,_⟩,
+                 },
                 end
 
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)

@@ -1,7 +1,7 @@
 import algebra.category
 import inverse limit fibrant
 
-open sigma category eq.ops
+open sigma category eq.ops function
 
 namespace reduced_coslice
   structure coslice_obs {ob : Type} (C : category ob) (a : ob) :=
