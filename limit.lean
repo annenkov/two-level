@@ -92,6 +92,10 @@ definition limit {J C : Category} (D : J ⇒ C) : Type  := has_terminal_obj (Con
 definition limit_obj [reducible] [unfold_full] {J C : Category} {D : J ⇒ C} : limit D → objects C
   | limit_obj (has_terminal_obj.mk c _) := c.1
 
+notation `Nat` `(` F `,` G `)` := F ⟹ G
+definition one_funct.{u} [reducible] [unfold_full] {C : Category.{1 1}} := const_funct_obj C Type_category.{u} poly_unit
+notation `𝟙` := one_funct
+
 -- binary product as a limit
 
 open bool prod eq.ops
