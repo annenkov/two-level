@@ -29,6 +29,7 @@ definition subcat [instance] (C : Category) (p : C → Prop) : category (subcat_
     id_left := λ a b f, id_left f,
     id_right := λ a b f, id_right f ⦄
 
+definition Subcat (C : Category) (p : C → Prop) : Category := Mk (subcat C p)
 
 open equiv equiv.ops
 
@@ -138,6 +139,22 @@ section reedy
         (λ a b f, funext (λ u, happly (NatSq f.1) star))
   end
 
+  -- explicit representation of the limit of X restricted to category C without z
+  definition lim_restricted [reducible] (X : C ⇒ Type_category) (z : C) [invC : invcat C]
+  := Σ (c : Π y, (Functor_from_C' z X) y),
+              Π (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'),
+                ((Functor_from_C' z X) f) (c y) = c y'
+
+  -- map from limit of X restricted to C' where we use explicit representation of limit L
+  definition map_L_to_Mz_alt (z : C) (X : C ⇒ Type_category) [invC : invcat C]
+  (L : lim_restricted X z) : matching_object X z :=
+    match L with
+    | ⟨η, NatSq⟩ :=
+    by refine natural_transformation.mk
+    (λ a u, η (mk _ (reduced_coslice_ne z a)))
+    (λ a b f, funext (λ x, NatSq _ _ _))
+  end
+
   definition singleton_contr_fiberₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E :=
   begin
   refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
@@ -151,7 +168,7 @@ section reedy
   notation `Nat` `(` F `,` G `)` := F ⟹ G
   definition one_funct {C : Category} := const_funct_obj C Type_category poly_unit
   notation `𝟙` := one_funct
-
+  set_option formatter.hide_full_terms false
   definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant.{u} X) :
     is_fibrant Nat(𝟙,X) :=
     begin
@@ -171,16 +188,16 @@ section reedy
         -- using equivalences
         apply equiv_is_fibrant,
         apply (equiv.symm nat_unit_sigma_equiv.{u}),
-        have Hq : Σ (q : X z → matching_object X z), is_fibration_alt q,
-                  from ⟨matching_obj_map X z, rfib z⟩, cases Hq with [q, fibration_q],
-        have Hp : Σ (p : Nat(𝟙, Functor_from_C' z X) → matching_object X z), p = map_L_to_Mz z X,
-                  from ⟨map_L_to_Mz z X, rfl⟩, cases Hp with [p, p_eq],
+        have Hq : Σ (q : X z → matching_object X z), (is_fibration_alt q × q = matching_obj_map X z),
+                  from ⟨matching_obj_map X z, (rfib z, rfl)⟩, cases Hq with [q, H'], cases H' with [fibration_q, q_eq],
+        have Hp : Σ p, p = map_L_to_Mz_alt z X,
+                  from ⟨map_L_to_Mz_alt z X, rfl⟩, cases Hp with [p, p_eq],
         apply equiv_is_fibrant, apply equiv.symm,
 
         calc
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
-                (Π (y y' : C_without_z z) (f : y ⟶ y'), X f (c y) = c y')) :
+             (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) :
                 begin refine equiv.mk _ _ _ _,
                 { intro, cases a with [p1, p2], refine ⟨p1 z, ⟨λ y, p1 y,(λ y' f, p2 z y' f, λ y y' f, p2 y y' f)⟩⟩ },
                 { intro, cases a with [c_z, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
@@ -201,21 +218,36 @@ section reedy
                 cases @fincat.has_decidable_eq C (⟨_,φ⟩) y  z with [y_eq_z, y_ne_z], {cases y_eq_z, esimp}, {esimp}},
                 { unfold right_inverse, unfold left_inverse, esimp, intro y, cases y with [c_z, Hs],
                 esimp, cases Hs with [p1, p2], esimp, cases p2, esimp,
-                cases (@has_decidable_eq C ⟨succ n', φ⟩ z z), esimp, congruence, apply sigma_eq_congr, apply sorry, apply sorry
-                --refine ⟨_,_⟩,
-                 },
+                cases (@has_decidable_eq C ⟨succ n', φ⟩ z z), esimp, congruence, apply sigma_eq_congr,
+                refine ⟨_,_⟩,
+                { apply funext, intro y',
+                  cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z with [y'_eq_z, y'_ne_z], esimp,
+                  cases y' with [y'', p'], esimp at *, exfalso, apply p', apply y'_eq_z,
+                  esimp, cases y', congruence },
+                { apply sorry  },
+                 apply sorry},
                 end
-
+         -- ... ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)) (d : Nat(𝟙,Functor_from_C' z X)),
+         --                 Π (y : C_without_z z) f, X f c_z = c y) : sorry
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
-         ... ≃ₛ (Σ (c_z : X z) (d : Nat(𝟙,Functor_from_C' z X)), p d = q c_z) : sorry
-         ... ≃ₛ (Σ (d : Nat(𝟙,Functor_from_C' z X)) (c_z : X z), q c_z = p d) : sorry,
+         ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) :
+         begin
+         refine equiv.mk (λw, ⟨w.1,_⟩) sorry sorry sorry,
+         { intro w, refine ⟨_,_⟩, refine ⟨w.2.1, prod.pr2 w.2.2⟩, rewrite p_eq,
+           unfold map_L_to_Mz_alt, rewrite q_eq, apply sorry },
+         end
+         ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : sorry,
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
         -- that L is fibrant (from IH)
         have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from sorry,
-        assert isFibL: is_fibrant Nat(𝟙,Functor_from_C' z X), begin apply IHn, apply rfibX', apply finC' end,
-        refine @fibration_domain_is_fibrant _ (mk _ isFibL) (λpb, pb.1) _,
+        assert isFibL: is_fibrant (lim_restricted X z),
+          begin
+          -- TODO: something in this proof causes the error with message about metavariables
+          refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'
+          end,
+        refine @fibration_domain_is_fibrant _ (Fib.mk _ isFibL) (λpb, pb.1) _,
         refine Pullback'_is_fibrant.{u} q p, apply fibration_q
       }
     end
