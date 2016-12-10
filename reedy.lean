@@ -1,10 +1,6 @@
 import fibrant matching inverse algebra.category limit fibrantlimits data.fin finite
 
-open invcat category functor matching_object Fib sigma.ops fincat natural_transformation
-
-definition nat_trans_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G}
-                        {p : natural_map N = natural_map M} : N = M := 
-           begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map at *, cases p, congruence end
+open invcat category functor matching_object Fib sigma.ops fincat natural_transformation eq
 
 definition fib_category : category Fib :=
   ⦃ category,
@@ -33,7 +29,7 @@ definition subcat [instance] (C : Category) (p : C → Prop) : category (subcat_
     id_left := λ a b f, id_left f,
     id_right := λ a b f, id_right f ⦄
 
-definition Subcat (C : Category) (p : C → Prop) : Category := Mk (subcat C p)
+definition Subcat.{u v} (C : Category.{u v}) (p : C → Prop) : Category := Mk (subcat C p)
 
 open equiv equiv.ops
 
@@ -42,8 +38,8 @@ section reedy
   variables {C : Category.{1 1}}
             {D : Category}
 
-  definition is_reedy_fibrant [class] (X : C ⇒ Type_category.{u}) [invcat C] :=
-    Π z, is_fibration_alt (matching_obj_map.{u} X z)
+  definition is_reedy_fibrant [class] (X : C ⇒ Type_category) [invcat C] :=
+    Π z, is_fibration_alt (matching_obj_map X z)
 
   open nat fin subcat_obj
 
@@ -131,23 +127,24 @@ section reedy
     cases invC, cases id_reflect_ℕop,
     apply (id_reflect c_hom_to rfl).2
   end
-  
+
   -- map from limit of X restricted to C'
-  definition map_L_to_Mz (z : C) (X : C ⇒ Type_category.{u}) [invC : invcat C]
+  definition map_L_to_Mz (z : C) (X : C ⇒ Type_category) [invC : invcat C]
     (L : cone_with_tip (Functor_from_C' z X) poly_unit) : matching_object X z :=
-      match L with
-      | natural_transformation.mk η NatSq :=
+      -- match L with
+      -- | natural_transformation.mk η NatSq :=
       -- refine allows to infer implicit argument for application of NatSq
-      by refine natural_transformation.mk
+      by cases L with [η, NatSq]; refine natural_transformation.mk
         (λ a u, η (mk (to a) (reduced_coslice_ne z a)) poly_unit.star)
-        (λ a b f, funext (λ u, happly (NatSq f.1) star))
-  end
+        (λ a b f, begin apply funext, intro, cases x, refine happly (NatSq _) poly_unit.star end)
+        --funext (λ u, happly (NatSq f.1) poly_unit.star))
+  --end
 
   -- explicit representation of the limit of X restricted to category C without z
-  definition lim_restricted [reducible] (X : C ⇒ Type_category.{u}) (z : C) [invC : invcat C]
+  definition lim_restricted [reducible] (X : C ⇒ Type_category) (z : C) [invC : invcat C]
   := Σ (c : Π y, (Functor_from_C' z X) y),
-              Π (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'),
-                ((Functor_from_C' z X) f) (c y) = c y'
+        Π (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'),
+          ((Functor_from_C' z X) f) (c y) = c y'
 
   -- map from limit of X restricted to C' where we use explicit representation of limit L
   definition map_L_to_Mz_alt (z : C) (X : C ⇒ Type_category.{u}) [invC : invcat C]
@@ -159,6 +156,9 @@ section reedy
     (λ a b f, funext (λ u, NatSq _ _ _))
   end
 
+  definition lift_to_rc [reducible] {z : C} (y : C_without_z z) (f : z ⟶ obj y): z//C :=
+    red_coslice_obs.mk (obj y) f (λ p a, prop y p⁻¹)
+
   definition singleton_contr_fiberₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E :=
   begin
   refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
@@ -166,13 +166,38 @@ section reedy
   esimp, induction p22 using eq.drec, congruence
   end
 
+  set_option formatter.hide_full_terms false
+  -- set_option pp.binder_types true
+  -- set_option pp.universes true
+  -- set_option pp.notation true
+
+  definition lemma1 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
+    {y : C_without_z z} {f : z ⟶ obj y}
+    {c : Π y : C_without_z z, X (obj y) }
+    { Heq' : ∀ (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'), morphism (Functor_from_C' z X) f (c y) = c y'} :
+      natural_map (map_L_to_Mz_alt z X ⟨c,Heq'⟩) (lift_to_rc y f) poly_unit.star = c y :=
+      begin unfold map_L_to_Mz_alt, unfold natural_map, cases y, esimp
+      end
+
+  definition map_from_span_p_q [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{u}) (z : C)
+  (w : Σ (c_z : X z) d, !map_L_to_Mz_alt d = !matching_obj_map c_z):
+  ((Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
+  (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
+  (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')))
+   :=
+  begin
+    cases w with [c_z, Hs], cases Hs with [d, Heq], unfold lim_restricted at d, cases d with [c, Heq'], existsi c_z, existsi c,
+    have H: natural_map (!map_L_to_Mz_alt ⟨c, Heq'⟩) = natural_map (!matching_obj_map c_z), from natural_map_eq Heq,
+     unfold map_L_to_Mz_alt at H, unfold natural_map at H, unfold matching_obj_map at H,
+    split,
+    { apply sorry },
+    { apply sorry}
+  end
+
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
     is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
-  
-  set_option formatter.hide_full_terms false
-  set_option pp.universes true
-  
-  definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category) (rfib : is_reedy_fibrant X) :
+
+  definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{u}) (rfib : is_reedy_fibrant X) :
     is_fibrant Nat(𝟙,X) :=
     begin
       cases finC with [n, φ],
@@ -218,7 +243,7 @@ section reedy
                   { esimp, apply l_y },
                 },
                 { unfold left_inverse, esimp, intros, cases x with [x, H], esimp, congruence, apply funext, intro y,
-                cases @fincat.has_decidable_eq C (⟨_,φ⟩) y  z with [y_eq_z, y_ne_z], 
+                cases @fincat.has_decidable_eq C (⟨_,φ⟩) y  z with [y_eq_z, y_ne_z],
                 {cases y_eq_z, esimp }, {esimp }},
                 { unfold right_inverse, unfold left_inverse, esimp, intro y, cases y with [c_z, Hs],
                 esimp, cases Hs with [p1, p2], esimp, cases p2, esimp,
@@ -238,13 +263,14 @@ section reedy
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) :
          begin
          refine @sigma_congr₂ _ _ _ _, intro c_z,
-         refine equiv.mk _ sorry sorry sorry,
+         refine equiv.mk _ _ sorry sorry,
          { intro w, refine ⟨_,_⟩, refine ⟨w.1, prod.pr2 w.2⟩, rewrite p_eq,
            unfold map_L_to_Mz_alt, rewrite q_eq,
            refine nat_trans_eq, unfold natural_map,
            apply funext, intro y, apply funext, intro u, unfold matching_obj_map,
            esimp, cases w with [c,p2], cases p2 with [p_l, p_r], esimp at *, symmetry,
            apply (p_l (subcat_obj.mk (to y) (reduced_coslice_ne z y)) (hom_to y)) },
+         { apply sorry }
          end
          ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : sorry,
 

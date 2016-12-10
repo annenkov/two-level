@@ -93,7 +93,7 @@ definition limit_obj [reducible] [unfold_full] {J C : Category} {D : J ⇒ C} : 
   | limit_obj (has_terminal_obj.mk c _) := c.1
 
 notation `Nat` `(` F `,` G `)` := F ⟹ G
-definition one_funct.{u} [reducible] [unfold_full] {C : Category.{1 1}} := const_funct_obj C Type_category.{u} poly_unit
+definition one_funct [reducible] [unfold_full] {C : Category.{1 1}} := const_funct_obj C Type_category poly_unit
 notation `𝟙` := one_funct
 
 -- binary product as a limit
@@ -147,6 +147,13 @@ open function
 -- just for rewriting in limit_in_pretype, because projections are left not simplified sometimes
 definition natural_map_proj {C D : Category} (F G: functor C D) (η :Π a, F a ⟶ G a)
   (nat : Π⦃a b : C⦄ (f : a ⟶ b), G f ∘ η a = η b ∘ F f) : natural_map (natural_transformation.mk η nat) = η := rfl
+
+definition nat_trans_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G}
+  {p : natural_map N = natural_map M} : N = M :=
+    begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map at *, cases p, congruence end
+
+definition natural_map_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G} (p : N = M) : natural_map N = natural_map M
+  := begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map, injection p, assumption  end
 
 definition limit_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : limit D :=
   ⦃ has_terminal_obj _,

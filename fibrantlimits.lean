@@ -109,7 +109,7 @@ open poly_unit
 open equiv
 
 definition const_funct_unit [reducible] [unfold_full] :=
-  const_funct_obj PullbackCat Type_category poly_unit.{max 1 u}
+  const_funct_obj PullbackCat Type_category poly_unit
 
 definition nat_unit_Pullback_equiv :
   const_funct_unit ⟹ pullback_diagram f g ≃ₛ Pullback f g:=
