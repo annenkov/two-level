@@ -174,24 +174,41 @@ section reedy
   definition lemma1 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
     {y : C_without_z z} {f : z ⟶ obj y}
     {c : Π y : C_without_z z, X (obj y) }
-    { Heq' : ∀ (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'), morphism (Functor_from_C' z X) f (c y) = c y'} :
-      natural_map (map_L_to_Mz_alt z X ⟨c,Heq'⟩) (lift_to_rc y f) poly_unit.star = c y :=
+    (Heq' : ∀ (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'), morphism (Functor_from_C' z X) f (c y) = c y') :
+      natural_map (map_L_to_Mz_alt z X ⟨c,Heq'⟩) (lift_to_rc y f) star = c y :=
       begin unfold map_L_to_Mz_alt, unfold natural_map, cases y, esimp
       end
+  
+  definition lemma2 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
+    {c_z : X z}
+    {y : C_without_z z} {f : z ⟶ obj y} :    
+    (natural_map (matching_obj_map X z c_z)) (lift_to_rc y f) star = X f c_z :=
+      begin unfold natural_map end
 
-  definition map_from_span_p_q [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{u}) (z : C)
-  (w : Σ (c_z : X z) d, !map_L_to_Mz_alt d = !matching_obj_map c_z):
-  ((Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
+  definition limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Type_category.{u}) (z : C) :
+  (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), 
   (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
-  (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')))
+  (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y'))
+    ≃ₛ
+  (Σ (c_z : X z) d, !map_L_to_Mz_alt d = !matching_obj_map c_z)
    :=
   begin
-    cases w with [c_z, Hs], cases Hs with [d, Heq], unfold lim_restricted at d, cases d with [c, Heq'], existsi c_z, existsi c,
-    have H: natural_map (!map_L_to_Mz_alt ⟨c, Heq'⟩) = natural_map (!matching_obj_map c_z), from natural_map_eq Heq,
-     unfold map_L_to_Mz_alt at H, unfold natural_map at H, unfold matching_obj_map at H,
-    split,
-    { apply sorry },
-    { apply sorry}
+    refine @sigma_congr₂ _ _ _ _, intro c_z,
+    refine equiv.mk _ _ sorry sorry,
+    { intro w, refine ⟨_,_⟩, refine ⟨w.1, prod.pr2 w.2⟩,
+      unfold map_L_to_Mz_alt, refine nat_trans_eq, unfold natural_map,
+      apply funext, intro y, apply funext, intro u, unfold matching_obj_map,
+      esimp, cases w with [c,p2], cases p2 with [p_l, p_r], esimp at *, symmetry,
+      apply (p_l (subcat_obj.mk (to y) (reduced_coslice_ne z y)) (hom_to y)) },
+    { intro w,
+      cases w  with [d, Heq], unfold lim_restricted at d, cases d with [c, Heq'], existsi c,
+      split,
+      { intros,
+        assert H: natural_map (!map_L_to_Mz_alt ⟨c, Heq'⟩) (lift_to_rc y f) star  = 
+                  natural_map (!matching_obj_map c_z) (lift_to_rc y f) star, begin rewrite Heq end,
+        symmetry,
+        apply #eq.ops (lemma1 Heq')⁻¹ ⬝ H ⬝ lemma2 },
+      { apply Heq'}}
   end
 
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
@@ -260,18 +277,7 @@ section reedy
          --                 Π (y : C_without_z z) f, X f c_z = c y) : sorry
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
-         ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) :
-         begin
-         refine @sigma_congr₂ _ _ _ _, intro c_z,
-         refine equiv.mk _ _ sorry sorry,
-         { intro w, refine ⟨_,_⟩, refine ⟨w.1, prod.pr2 w.2⟩, rewrite p_eq,
-           unfold map_L_to_Mz_alt, rewrite q_eq,
-           refine nat_trans_eq, unfold natural_map,
-           apply funext, intro y, apply funext, intro u, unfold matching_obj_map,
-           esimp, cases w with [c,p2], cases p2 with [p_l, p_r], esimp at *, symmetry,
-           apply (p_l (subcat_obj.mk (to y) (reduced_coslice_ne z y)) (hom_to y)) },
-         { apply sorry }
-         end
+         ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply limit_pullback_p_q_equiv end
          ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : sorry,
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
