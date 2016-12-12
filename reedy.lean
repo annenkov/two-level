@@ -194,7 +194,7 @@ section reedy
    :=
   begin
     refine @sigma_congr₂ _ _ _ _, intro c_z,
-    refine equiv.mk _ _ sorry sorry,
+    refine equiv.mk _ _ _ _,
     { intro w, refine ⟨_,_⟩, refine ⟨w.1, prod.pr2 w.2⟩,
       unfold map_L_to_Mz_alt, refine nat_trans_eq, unfold natural_map,
       apply funext, intro y, apply funext, intro u, unfold matching_obj_map,
@@ -208,7 +208,10 @@ section reedy
                   natural_map (!matching_obj_map c_z) (lift_to_rc y f) star, begin rewrite Heq end,
         symmetry,
         apply #eq.ops (lemma1 Heq')⁻¹ ⬝ H ⬝ lemma2 },
-      { apply Heq'}}
+      { apply Heq'}},
+    { intro w, cases w with [c, H], cases H with [p1,p2], apply sigma_eq_congr, existsi rfl, apply apd },
+    { intro w, cases w with [c, H], apply sigma_eq_congr, refine ⟨_,_⟩, cases c with [p1,p2],
+    apply sigma_eq_congr, existsi rfl, refine apd _ _, apply p2, reflexivity, apply proof_irrel  }
   end
 
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
