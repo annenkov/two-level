@@ -180,12 +180,12 @@ section reedy
 
   definition lemma2 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
     {c_z : X z}
-    {y : C_without_z z} {f : z ⟶ obj y} :    
+    {y : C_without_z z} {f : z ⟶ obj y} :
     (natural_map (matching_obj_map X z c_z)) (lift_to_rc y f) star = X f c_z :=
       begin unfold natural_map end
 
-  definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Type_category.{u}) (z : C) : 
-  (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), 
+  definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Type_category.{u}) (z : C) :
+  (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
   (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
   (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y'))
     ≃ₛ
@@ -203,7 +203,7 @@ section reedy
       cases w  with [d, Heq], unfold lim_restricted at d, cases d with [c, Heq'], existsi c,
       split,
       { intros,
-        assert H: natural_map (!map_L_to_Mz_alt ⟨c, Heq'⟩) (lift_to_rc y f) star  = 
+        assert H: natural_map (!map_L_to_Mz_alt ⟨c, Heq'⟩) (lift_to_rc y f) star  =
                   natural_map (!matching_obj_map c_z) (lift_to_rc y f) star, begin rewrite Heq end,
         symmetry,
         apply #eq.ops (lemma1 Heq')⁻¹ ⬝ H ⬝ lemma2 },
@@ -212,26 +212,26 @@ section reedy
     { intro w, cases w with [c, H], apply sigma_eq_congr, refine ⟨_,_⟩, cases c with [p1,p2],
     apply sigma_eq_congr, existsi rfl, refine apd _ _, apply p2, reflexivity, apply proof_irrel  }
   end
-  
+
   definition lim_two_pieces_eq
   {X : C ⇒ Type_category.{u}}
   { z : C }
-  { c_z : X z}  
+  { c_z : X z}
   { c : Π y, X (obj y) }
   {a b : (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
-  (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')} : a = b := 
+  (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')} : a = b :=
   begin cases a, cases b, congruence end
 
   definition limit_two_piece_limit_equiv [invC : invcat C] {n' : ℕ} (φ : C ≃ₛ fin (succ n'))
     { z : C}
     ( max_z : to_fun (fin (succ n')) z = maxi)
     (X : C ⇒ Type_category.{u}) :
-    (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y') 
+    (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
       ≃ₛ
-    (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), 
+    (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
     (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
     (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y'))
-    := begin 
+    := begin
        refine equiv.mk _ _ _ _,
                 { intro, cases a with [p1, p2], refine ⟨p1 z, ⟨λ y, p1 y,(λ y' f, p2 z y' f, λ y y' f, p2 y y' f)⟩⟩ },
                 { intro, cases a with [c_z, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
@@ -258,29 +258,23 @@ section reedy
 
                 { unfold right_inverse, unfold left_inverse, esimp, intro y, cases y with [c_z, Hs],
                   esimp, cases Hs with [p1, p2], esimp, cases p2, esimp,
-                  cases (@has_decidable_eq C ⟨succ n', φ⟩ z z), esimp, congruence,
-                  assert H : (λ y, decidable.cases_on 
-                    (@fincat.has_decidable_eq _ ⟨_,φ⟩ _ _ )
-                    (λ y_eq_z, y_eq_z⁻¹ ▹ c_z) 
-                    (λ y_ne_z, p1 (subcat_obj.mk (obj y) y_ne_z))) = p1, 
-                    begin 
-                      apply funext, intro y',
-                      cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z with [y'_eq_z, y'_ne_z], esimp,
-                      cases y' with [y'', p'], esimp at *, exfalso, apply p', apply y'_eq_z,
-                      esimp, cases y', congruence
-                    end,
+                  cases (@has_decidable_eq C ⟨succ n', φ⟩ z z) with [y_eq_z, y_ne_z], esimp, congruence,
                   apply sigma_eq_congr,
-                  refine ⟨H,lim_two_pieces_eq⟩,                  
-                  exfalso, apply a_2, reflexivity
+                  refine ⟨_,lim_two_pieces_eq⟩,
+                  { apply funext, intro y',
+                    cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z with [y'_eq_z, y'_ne_z], esimp,
+                    cases y' with [y'', p'], esimp at *, exfalso, apply p', apply y'_eq_z,
+                    esimp, cases y', congruence },
+                  exfalso, apply y_ne_z, reflexivity
               }
            end
 
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
     is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
 
-  definition fin_0_nat_tr_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Type_category) : Nat(𝟙,X) ≃ₛ poly_unit := 
-    begin 
-    cases φ with [f,g,l,r], 
+  definition fincat_0_limit_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Type_category) : Nat(𝟙,X) ≃ₛ poly_unit :=
+    begin
+    cases φ with [f,g,l,r],
     refine equiv.mk (λ x, star) _ _ _,
     { intros, esimp, refine mk _ _, intros x, exfalso, apply (false_of_fin_zero (f x)),
       intros a b u, exfalso, apply (false_of_fin_zero (f a))},
@@ -294,10 +288,10 @@ section reedy
       cases finC with [n, φ],
       revert φ, revert rfib, revert invC, revert X, revert C,
       induction n with [n', IHn],
-      { intros C X invC rfib φ, apply @equiv_is_fibrant.{max 1 u} _ _ (@fin_0_nat_tr_unit_equiv _ φ X)⁻¹ },
+      { intros C X invC rfib φ, apply equiv_is_fibrant.{max 1 u} (@fincat_0_limit_unit_equiv _ φ X)⁻¹ },
       { intros C X invC rfib φ, esimp,
         -- choosing maximal element
-        have H : Σ z, @to_fun _ (fin (succ n')) φ z = maxi, from ⟨inv_fun C maxi, right_inv _ _ _⟩,
+        have H : Σ z, @to_fun _ (fin (succ n')) φ z = maxi, from ⟨inv_fun C maxi, !right_inv⟩,
         cases H with [z, z_max],
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
@@ -315,8 +309,8 @@ section reedy
 
         calc
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
-             ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), 
-                (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z) 
+             ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
+                (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
                 (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv φ z_max
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
@@ -327,8 +321,8 @@ section reedy
         -- that L is fibrant (from IH)
         have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from Functor_from_C'_reedy_fibrant z X,
         assert isFibL: is_fibrant (lim_restricted X z),
-          begin          
-          refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'          
+          begin
+          refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'
           end,
         refine @fibration_domain_is_fibrant _ (Fib.mk _ isFibL) (λpb, pb.1) _,
         refine Pullback'_is_fibrant q p, apply fibration_q
