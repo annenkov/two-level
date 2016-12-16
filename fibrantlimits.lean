@@ -5,7 +5,7 @@ open function
 section pullback
 
 universe variable u
-variables {A B C : Type.{max 1 u}}
+variables {A B C : Type.{u}}
           (f : A → C) (g : B → C)
           {isfib : is_fibration_alt f}
 
@@ -67,7 +67,7 @@ open category
 
 definition PullbackCat := Mk pullback_category
 
-definition pullback_diagram (f : A → C) (g : B → C) : PullbackCat ⇒ Type_category :=
+definition pullback_diagram (f : A → C) (g : B → C) : PullbackCat ⇒ Type_category.{u} :=
  ⦃ functor,
    object := λ c,
      match c with

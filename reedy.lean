@@ -29,7 +29,7 @@ definition subcat [instance] (C : Category) (p : C → Prop) : category (subcat_
     id_left := λ a b f, id_left f,
     id_right := λ a b f, id_right f ⦄
 
-definition Subcat.{u v} (C : Category.{u v}) (p : C → Prop) : Category := Mk (subcat C p)
+definition Subcat (C : Category) (p : C → Prop) : Category := Mk (subcat C p)
 
 open equiv equiv.ops
 
@@ -168,7 +168,6 @@ section reedy
 
   set_option formatter.hide_full_terms false
   -- set_option pp.binder_types true
-  -- set_option pp.universes true
   -- set_option pp.notation true
 
   definition lemma1 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
@@ -213,15 +212,7 @@ section reedy
     { intro w, cases w with [c, H], apply sigma_eq_congr, refine ⟨_,_⟩, cases c with [p1,p2],
     apply sigma_eq_congr, existsi rfl, refine apd _ _, apply p2, reflexivity, apply proof_irrel  }
   end
-  open prod
-  definition prod_proj_eq {A B : Type } {p1 p2 : A × B}
-    (eq1 : pr1 p1 = pr1 p2) (eq2 : pr2 p1 = pr2 p2) : p1 = p2 := 
-  begin cases p1: cases p2: esimp at *: cases eq1: cases eq2: reflexivity end
-  definition proj1_eq {A B: Type } {a : A} {b : B} : pr1 (a,b) = a := rfl
-  --set_option pp.all true
-
- 
-
+  
   definition lim_two_pieces_eq
   {X : C ⇒ Type_category.{u}}
   { z : C }
@@ -287,13 +278,13 @@ section reedy
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
     is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
 
-  definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{u}) (rfib : is_reedy_fibrant X) :
+  definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant X) :
     is_fibrant Nat(𝟙,X) :=
     begin
       cases finC with [n, φ],
       revert φ, revert rfib, revert invC, revert X, revert C,
       induction n with [n', IHn],
-      { apply sorry},
+      { apply sorry  },
       { intros C X invC rfib φ, esimp,
         -- choosing maximal element
         have H : Σ z, @to_fun _ (fin (succ n')) φ z = maxi, from ⟨inv_fun C maxi, right_inv _ _ _⟩,
@@ -317,8 +308,6 @@ section reedy
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)), 
                 (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z) 
                 (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv φ z_max
-         -- ... ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)) (d : Nat(𝟙,Functor_from_C' z X)),
-         --                 Π (y : C_without_z z) f, X f c_z = c y) : sorry
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply two_piece_limit_pullback_p_q_equiv end
@@ -326,11 +315,10 @@ section reedy
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
         -- that L is fibrant (from IH)
-        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from sorry,
+        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from Functor_from_C'_reedy_fibrant z X,
         assert isFibL: is_fibrant (lim_restricted X z),
-          begin
-          -- TODO: something in this proof causes the error with message about metavariables
-          refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'
+          begin          
+          refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'          
           end,
         refine @fibration_domain_is_fibrant _ (Fib.mk _ isFibL) (λpb, pb.1) _,
         refine Pullback'_is_fibrant q p, apply fibration_q
