@@ -278,13 +278,23 @@ section reedy
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
     is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
 
+  definition fin_0_nat_tr_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Type_category) : Nat(𝟙,X) ≃ₛ poly_unit := 
+    begin 
+    cases φ with [f,g,l,r], 
+    refine equiv.mk (λ x, star) _ _ _,
+    { intros, esimp, refine mk _ _, intros x, exfalso, apply (false_of_fin_zero (f x)),
+      intros a b u, exfalso, apply (false_of_fin_zero (f a))},
+    { unfold left_inverse, intro L, cases L, congruence, apply funext, intro x, exfalso, apply (false_of_fin_zero (f x))},
+    { unfold right_inverse, unfold left_inverse, intro x, cases x, reflexivity }
+    end
+
   definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant X) :
-    is_fibrant Nat(𝟙,X) :=
+    is_fibrant (limit_obj (limit_in_pretype.{max 1 u} X)) :=
     begin
       cases finC with [n, φ],
       revert φ, revert rfib, revert invC, revert X, revert C,
       induction n with [n', IHn],
-      { apply sorry  },
+      { intros C X invC rfib φ, apply @equiv_is_fibrant.{max 1 u} _ _ (@fin_0_nat_tr_unit_equiv _ φ X)⁻¹ },
       { intros C X invC rfib φ, esimp,
         -- choosing maximal element
         have H : Σ z, @to_fun _ (fin (succ n')) φ z = maxi, from ⟨inv_fun C maxi, right_inv _ _ _⟩,

@@ -11,6 +11,7 @@ structure is_fibrant [class] (X : Type) := mk ::
 constant equiv_is_fibrant {X Y : Type}(e : X ≃ₛ Y)[fib : is_fibrant X] : is_fibrant Y
 
 constant unit_is_fibrant' : is_fibrant' unit
+constant polyunit_is_fibrant' : is_fibrant' poly_unit
 
 constant pi_is_fibrant' {X : Type}{Y : X → Type}
   : is_fibrant X
@@ -55,6 +56,7 @@ constant fib_is_fibrant' : is_fibrant' Fib
 -- instances
 
 definition unit_is_fibrant [instance] : is_fibrant unit := is_fibrant.mk unit_is_fibrant'
+definition polyunit_is_fibrant [instance] : is_fibrant poly_unit := is_fibrant.mk polyunit_is_fibrant'
 
 definition pi_is_fibrant [instance] {X : Type}{Y : X → Type}
   [fibX : is_fibrant X] [fibY : Π (x : X), is_fibrant (Y x)] :
