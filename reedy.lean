@@ -1,6 +1,8 @@
-import fibrant matching inverse algebra.category limit fibrantlimits data.fin finite
+import fibrant matching inverse algebra.category 
+       limit fibrantlimits data.fin finite        
 
-open invcat category functor matching_object Fib sigma.ops fincat natural_transformation eq
+open invcat category functor matching_object Fib 
+     sigma.ops fincat natural_transformation eq
 
 definition fib_category : category Fib :=
   ⦃ category,
@@ -84,15 +86,53 @@ section reedy
       { unfold function.right_inverse, unfold function.left_inverse, intro, esimp,
         unfold lift_down, cases x, congruence, rewrite r}
     end
+  definition has_lt_ℕop [instance] : has_lt ℕop := nat_has_lt
+  definition has_le_ℕop [instance] : has_le ℕop := nat_has_le
+  definition strict_order_ℕop [instance] : strict_order ℕop := 
+    strict_order.mk nat.lt (@lt.irrefl ℕ _) (λ a b c, @nat.lt_trans a b c)
+  definition weak_order_ℕop [instance] : weak_order ℕop := 
+    weak_order.mk nat.le (@le.refl ℕ _) (λ a b c, @nat.le_trans a b c) (λ a b, nat.le_antisymm)
 
-  definition no_incoming_non_id_arrows {n : ℕ} (z : C) {y : C} [φ : objects C ≃ₛ fin (nat.succ n)] [invC : invcat C]
-    {max_z : to_fun (fin (nat.succ n)) z = maxi} : ¬ ∃ (f : y ⟶ z), y ≠ z :=
-    begin cases invC, cases id_reflect_ℕop with [ψ, id_r], intro H, cases H with [f, p],
-    assert H : to_fun (fin (succ n)) y ≠ to_fun (fin (succ n)) z,
-      begin intro, apply p, apply injective_of_left_inverse (left_inv _ _), assumption end,
-      rewrite max_z at H,
-      have H' : to_fun (fin (succ n)) y < n, from lt_max_of_ne_max H,
-      apply sorry
+  -- definition fin1_singleton {i : fin 1} : i = fin.zero 0 :=
+  -- begin cases i with [n, Hlt], cases n, reflexivity, cases a,  end
+    
+  definition max_fun_to_ℕ (φ : C → ℕ) [inj_φ : injective φ] {n : ℕ} [ψ : objects C ≃ₛ fin (nat.succ n)] :
+    Σ z, Π c, φ c ≤ φ z := 
+  begin
+    generalize inj_φ, clear inj_φ, generalize φ, clear φ, generalize ψ, clear ψ, generalize C, clear C,
+    induction n with [n', IHn],
+    intros,    
+    { cases ψ with [f,g,l,r], esimp at *,
+      existsi g (fin.zero 0), intro, assert H : f c = zero, 
+      apply eq_of_veq, cases (f c) with [v, Hlt], esimp, cases v, reflexivity, apply sorry, rewrite -l, rewrite H },
+    { intros, 
+      have H : Σ z, @to_fun _ (fin (succ (nat.succ n'))) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,
+      cases H with [z, max_z],
+      have H : Π (φ : C_without_z z → ℕ)(inj_φ : injective φ),
+               Σ (z : C_without_z z), ∀ c, φ c ≤ φ z, from IHn _ (@C_without_z_is_finite _ _ z _ max_z),
+      -- TODO: show that φ ∘ obj is injective
+      cases H (φ ∘ obj) sorry with [z', Hmax],
+      --cases (@fincat.has_decidable_eq _ _ z (obj z')) with [z_eq_z', z_ne_z'],
+      cases (@decidable_le (φ z) (φ z')) with [z_le, z_ne_le],
+      existsi z', apply sorry,
+      existsi z, intro, apply nat.le_of_eq_or_lt,
+      cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z) with [c_eq_z, c_ne_z],
+      left, rewrite c_eq_z,
+      right, have Hmax_c' : φ (obj (mk c c_ne_z)) ≤ φ (obj z'), from Hmax (mk c c_ne_z), esimp at *,      
+      have Hlt : φ z' < φ z, from sorry,
+      apply lt_of_le_of_lt Hmax_c' Hlt,
+      }
+  end
+  
+  open invcat
+  
+  definition no_incoming_non_id_arrows (z : C) {y : C} {φ : C ⇒ ℕop} {max_rank : φ y ≤ φ z}
+    : ¬ ∃ (f : y ⟶ z), y ≠ z :=
+    begin intro H, cases H with [f, p],
+    have H : φ y ≥ φ z, from φ f,
+    have inj_φ : injective φ, from sorry,
+    have y_eq_z : y = z, from inj_φ (le.antisymm max_rank H),
+    apply p, assumption
     end
 
   definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invcat C] [rfibX : is_reedy_fibrant X]
@@ -222,9 +262,11 @@ section reedy
   (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')} : a = b :=
   begin cases a, cases b, congruence end
 
-  definition limit_two_piece_limit_equiv [invC : invcat C] {n' : ℕ} (φ : C ≃ₛ fin (succ n'))
+  definition limit_two_piece_limit_equiv [invC : invcat C] {n' : ℕ} 
+    (ψ : C ≃ₛ fin (succ n'))
     { z : C}
-    ( max_z : to_fun (fin (succ n')) z = maxi)
+    {φ : C ⇒ ℕop} 
+    (max_rank : Πy, φ y ≤ φ z)
     (X : C ⇒ Type_category.{u}) :
     (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
       ≃ₛ
@@ -235,34 +277,34 @@ section reedy
        refine equiv.mk _ _ _ _,
                 { intro, cases a with [p1, p2], refine ⟨p1 z, ⟨λ y, p1 y,(λ y' f, p2 z y' f, λ y y' f, p2 y y' f)⟩⟩ },
                 { intro, cases a with [c_z, p'], cases p' with [p2, p3], cases p3 with [l_z, l_y], refine ⟨_,λ y y' f, _⟩, intro y'',
-                  have Heq : decidable (y'' = z), from @fincat.has_decidable_eq _ (⟨_,φ⟩) _ _,
+                  have Heq : decidable (y'' = z), from @fincat.has_decidable_eq _ (⟨_,ψ⟩) _ _,
                   cases Heq with [y_eq_z, y_ne_z],
                   { rewrite y_eq_z, assumption },
                   { refine p2 (mk y'' _), assumption },
                   intros,
                   -- now, we have 4 cases to consider: y=z, y≠z, y'=z, y'≠z
-                  generalize (@fincat.has_decidable_eq C ⟨_,φ⟩ y  z),
-                  generalize (@fincat.has_decidable_eq C ⟨_,φ⟩ y' z),
+                  generalize (@fincat.has_decidable_eq C ⟨_,ψ⟩ y  z),
+                  generalize (@fincat.has_decidable_eq C ⟨_,ψ⟩ y' z),
                   intros deq_y deq_y',
                   cases deq_y' with [y_eq_z, y_ne_z]:
                   cases deq_y with [y'_eq_z, y'_ne_z],
                   { cases y_eq_z, cases y'_eq_z, esimp, rewrite (endomorphism_is_id f), refine happly (respect_id _ _) _},
                   { cases y_eq_z, esimp, apply l_z},
-                  { cases y'_eq_z, esimp, exfalso, apply (@no_incoming_non_id_arrows _ n' z y φ), assumption, existsi f, assumption },
+                  { cases y'_eq_z, esimp, exfalso, apply (@no_incoming_non_id_arrows _ z y φ (max_rank y)), existsi f, assumption },
                   { esimp, apply l_y },
                 },
 
                 { unfold left_inverse, esimp, intros, cases x with [x, H], esimp, congruence, apply funext, intro y,
-                  cases @fincat.has_decidable_eq C (⟨_,φ⟩) y  z with [y_eq_z, y_ne_z],
+                  cases @fincat.has_decidable_eq C (⟨_,ψ⟩) y  z with [y_eq_z, y_ne_z],
                 { cases y_eq_z, esimp }, {esimp }},
 
                 { unfold right_inverse, unfold left_inverse, esimp, intro y, cases y with [c_z, Hs],
                   esimp, cases Hs with [p1, p2], esimp, cases p2, esimp,
-                  cases (@has_decidable_eq C ⟨succ n', φ⟩ z z) with [y_eq_z, y_ne_z], esimp, congruence,
+                  cases (@has_decidable_eq C ⟨succ n', ψ⟩ z z) with [y_eq_z, y_ne_z], esimp, congruence,
                   apply sigma_eq_congr,
                   refine ⟨_,lim_two_pieces_eq⟩,
                   { apply funext, intro y',
-                    cases @fincat.has_decidable_eq C (⟨_,φ⟩) y' z with [y'_eq_z, y'_ne_z], esimp,
+                    cases @fincat.has_decidable_eq C (⟨_,ψ⟩) y' z with [y'_eq_z, y'_ne_z], esimp,
                     cases y' with [y'', p'], esimp at *, exfalso, apply p', apply y'_eq_z,
                     esimp, cases y', congruence },
                   exfalso, apply y_ne_z, reflexivity
@@ -285,18 +327,23 @@ section reedy
   definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype.{max 1 u} X)) :=
     begin
-      cases finC with [n, φ],
-      revert φ, revert rfib, revert invC, revert X, revert C,
+      cases finC with [n, ψ],
+      revert ψ, revert rfib, revert invC, revert X, revert C,
       induction n with [n', IHn],
-      { intros C X invC rfib φ, apply equiv_is_fibrant.{max 1 u} (@fincat_0_limit_unit_equiv _ φ X)⁻¹ },
-      { intros C X invC rfib φ, esimp,
-        -- choosing maximal element
-        have H : Σ z, @to_fun _ (fin (succ n')) φ z = maxi, from ⟨inv_fun C maxi, !right_inv⟩,
+      { intros C X invC rfib ψ, apply equiv_is_fibrant.{max 1 u} (@fincat_0_limit_unit_equiv _ ψ X)⁻¹ },
+      { intros C X invC rfib ψ, esimp,        
+        -- choosing an element of C with maximal rank
+        -- have H : Σ z, @to_fun _ (fin (succ n')) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,
+        have inv_C : invcat C, from invC,
+        cases invC, cases id_reflect_ℕop with [φ, id_refl],
+        have inj_φ : injective (object φ), from sorry,
+        have H : Σ z, Π (y : C), φ y ≤ φ z, from @max_fun_to_ℕ _ φ inj_φ _ ψ,
         cases H with [z, z_max],
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
-        have invC' : invcat (C_without_z z), from C_without_z_invcat z,
-        have finC' : C_without_z z ≃ₛ fin n', from @C_without_z_is_finite _ _ _ _ z_max,
+        have invC' : invcat (C_without_z z), from C_without_z_invcat z,        
+        have finC' : C_without_z z ≃ₛ fin n', from sorry, --@C_without_z_is_finite _ _ _ _ z_max,
+        
 
         -- using equivalences
         apply equiv_is_fibrant,
@@ -311,7 +358,7 @@ section reedy
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
                 (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
-                (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv φ z_max
+                (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ z_max
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply two_piece_limit_pullback_p_q_equiv end
@@ -319,7 +366,7 @@ section reedy
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
         -- that L is fibrant (from IH)
-        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from Functor_from_C'_reedy_fibrant z X,
+        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from @Functor_from_C'_reedy_fibrant _ z X _ rfib,
         assert isFibL: is_fibrant (lim_restricted X z),
           begin
           refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'

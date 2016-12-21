@@ -146,7 +146,7 @@ definition Pullback'_Pullback_equiv : Pullback' f g ≃ₛ Pullback f g:=
     (λ x, begin cases x, cases p_law with [p₁, p₂], esimp, cases p₂, esimp end)
 
 open eq
-
+set_option pp.all true
 section equiv
   -- TODO: move these definitions to facts.lean or another "library" file
   open eq.ops
@@ -165,17 +165,19 @@ section equiv
         apply sigma_eq_congr, refine ⟨_,_⟩, apply l,
         calc
         (l x₁ ▹ ((r (f x₁))⁻¹ ▹ x₂))
-            = (r (f x₁))⁻¹ ▹ x₂ : sorry -- apd (λ p, eq.rec x₂ (eq.symm(r (f x₁)))) (l x₁)
-        ... = ap f (l x₁)⁻¹ ▹ x₂ : proof_irrel ((r (f x₁))⁻¹) (ap f (l x₁)⁻¹)
-        ... = (l x₁)⁻¹ ▹ x₂ : naturality_subst f (l x₁)⁻¹ _
+            = (r (f x₁))⁻¹ ▹ x₂ : sorry --apd (λ p, eq.rec x₂ (eq.symm(r (f x₁)))) (l x₁)
         ... = x₂ : apd _ _
         end)
    begin
-     unfold function.right_inverse at *, unfold function.left_inverse at *, intro x, cases x with [p₁, p₂],
-     cases φ with [f, g, l, r], esimp,
-     esimp, apply sigma_eq_congr, refine ⟨_,_⟩, apply r,
+     intro x, cases x with [p₁, p₂],
+     cases φ with [f, g, l, r], unfold function.right_inverse at *, unfold function.left_inverse at *,  esimp at *,
+     apply sigma_eq_congr, refine ⟨_,_⟩, apply r,
+     have H0 : r p₁ ▹ (r p₁)⁻¹ ▹ p₂ = r p₁ ▹ (λ x, (r p₁)⁻¹ ▹ p₂) p₂, from rfl,
+     have H : #eq.ops r p₁ ▹ (r p₁)⁻¹ ▹ p₂ = @eq.rec _ _ (λa, F a) p₂ _ (r p₁)⁻¹, from apd _ _,
+     have H' : (r p₁)⁻¹ ▹ p₂ = p₂, from apd _ _,
      calc #eq.ops r p₁ ▹ (r p₁)⁻¹ ▹ p₂
-         = #eq.ops (r p₁)⁻¹ ▹ p₂ : sorry -- apd (#eq.ops λ p, eq.rec p₂ (r p₁)⁻¹) (r p₁)
+         = r p₁ ▹ (λ x, (r p₁)⁻¹ ▹ p₂) p₂ : rfl
+     ... = #eq.ops (r p₁)⁻¹ ▹ p₂ : sorry --H
      ... = p₂ : sorry
    end
 
