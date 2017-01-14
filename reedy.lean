@@ -86,41 +86,46 @@ section reedy
       { unfold function.right_inverse, unfold function.left_inverse, intro, esimp,
         unfold lift_down, cases x, congruence, rewrite r}
     end
+
   definition has_lt_ℕop [instance] : has_lt ℕop := nat_has_lt
   definition has_le_ℕop [instance] : has_le ℕop := nat_has_le
   definition strict_order_ℕop [instance] : strict_order ℕop := 
     strict_order.mk nat.lt (@lt.irrefl ℕ _) (λ a b c, @nat.lt_trans a b c)
   definition weak_order_ℕop [instance] : weak_order ℕop := 
-    weak_order.mk nat.le (@le.refl ℕ _) (λ a b c, @nat.le_trans a b c) (λ a b, nat.le_antisymm)
-
-  -- definition fin1_singleton {i : fin 1} : i = fin.zero 0 :=
-  -- begin cases i with [n, Hlt], cases n, reflexivity, cases a,  end
+    weak_order.mk nat.le (@le.refl ℕ _) (λ a b c, @nat.le_trans a b c) (λ a b, nat.le_antisymm)  
     
   definition max_fun_to_ℕ (φ : C → ℕ) [inj_φ : injective φ] {n : ℕ} [ψ : objects C ≃ₛ fin (nat.succ n)] :
-    Σ z, Π c, φ c ≤ φ z := 
+  Σ z, (Π c, φ c ≤ φ z) × (@to_fun _ (fin (succ n)) ψ z = maxi) := 
   begin
     generalize inj_φ, clear inj_φ, generalize φ, clear φ, generalize ψ, clear ψ, generalize C, clear C,
     induction n with [n', IHn],
     intros,    
     { cases ψ with [f,g,l,r], esimp at *,
-      existsi g (fin.zero 0), intro, assert H : f c = zero, 
-      apply eq_of_veq, cases (f c) with [v, Hlt], esimp, cases v, reflexivity, apply sorry, rewrite -l, rewrite H },
-    { intros, 
-      have H : Σ z, @to_fun _ (fin (succ (nat.succ n'))) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,
-      cases H with [z, max_z],
-      have H : Π (φ : C_without_z z → ℕ)(inj_φ : injective φ),
-               Σ (z : C_without_z z), ∀ c, φ c ≤ φ z, from IHn _ (@C_without_z_is_finite _ _ z _ max_z),
+      existsi g (fin.zero 0), 
+      refine (_,_),
+      intro, assert H : f c = zero, apply eq_of_veq, cases (f c) with [v, Hlt], esimp, cases v, 
+      reflexivity, cases Hlt with [a, Hle], exfalso, rewrite -(succ_le_zero_iff_false (succ a)), apply Hle, rewrite -l, rewrite H,
+      rewrite r },
+    { intros,
+      have H : Σ z, @to_fun _ (fin (succ (nat.succ n'))) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,      
+      cases H with [z'', max_z],
+      have ψ' : C_without_z z'' ≃ fin (succ n'), from (@C_without_z_is_finite _ _ z'' _ max_z),
+      have H : Π (φ : C_without_z z'' → ℕ) (inj_φ : injective φ),
+               Σ (z : C_without_z z''), (Π c, φ c ≤ φ z) × (@to_fun ( C_without_z z'') (fin (nat.succ n')) ψ' z = maxi), 
+      from IHn _ ψ',
       -- TODO: show that φ ∘ obj is injective
       cases H (φ ∘ obj) sorry with [z', Hmax],
+      cases Hmax with [max_φ, max_ψ],
       --cases (@fincat.has_decidable_eq _ _ z (obj z')) with [z_eq_z', z_ne_z'],
-      cases (@decidable_le (φ z) (φ z')) with [z_le, z_ne_le],
+      cases (@decidable_le (φ z'') (φ z')) with [z_le, z_ne_le],
       existsi z', apply sorry,
-      existsi z, intro, apply nat.le_of_eq_or_lt,
-      cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z) with [c_eq_z, c_ne_z],
+      existsi z'', refine (_,_), intro, apply nat.le_of_eq_or_lt,
+      cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z'') with [c_eq_z, c_ne_z],
       left, rewrite c_eq_z,
-      right, have Hmax_c' : φ (obj (mk c c_ne_z)) ≤ φ (obj z'), from Hmax (mk c c_ne_z), esimp at *,      
-      have Hlt : φ z' < φ z, from sorry,
+      right, have Hmax_c' : φ (obj (mk c c_ne_z)) ≤ φ (obj z'), from max_φ (mk c c_ne_z), esimp at *,      
+      have Hlt : φ z' < φ z'', from sorry,
       apply lt_of_le_of_lt Hmax_c' Hlt,
+      apply max_z
       }
   end
   
@@ -332,17 +337,17 @@ section reedy
       induction n with [n', IHn],
       { intros C X invC rfib ψ, apply equiv_is_fibrant.{max 1 u} (@fincat_0_limit_unit_equiv _ ψ X)⁻¹ },
       { intros C X invC rfib ψ, esimp,        
-        -- choosing an element of C with maximal rank
-        -- have H : Σ z, @to_fun _ (fin (succ n')) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,
         have inv_C : invcat C, from invC,
         cases invC, cases id_reflect_ℕop with [φ, id_refl],
         have inj_φ : injective (object φ), from sorry,
-        have H : Σ z, Π (y : C), φ y ≤ φ z, from @max_fun_to_ℕ _ φ inj_φ _ ψ,
-        cases H with [z, z_max],
+        -- choosing an element of C with maximal rank
+        have H : Σ z, (Π (y : C), φ y ≤ φ z) × (@to_fun _ (fin (succ n')) ψ z = maxi),
+        from @max_fun_to_ℕ _ φ inj_φ _ ψ,
+        cases H with [z, Hmax], cases Hmax with [z_max_φ, z_max_ψ],
         -- removing z from C and showing that resulting category
         -- is still inverse and finite
         have invC' : invcat (C_without_z z), from C_without_z_invcat z,        
-        have finC' : C_without_z z ≃ₛ fin n', from sorry, --@C_without_z_is_finite _ _ _ _ z_max,
+        have finC' : C_without_z z ≃ₛ fin n', from @C_without_z_is_finite _ _ _ _ z_max_ψ,
         
 
         -- using equivalences
@@ -358,7 +363,7 @@ section reedy
          (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
                 (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
-                (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ z_max
+                (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ z_max_φ
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply two_piece_limit_pullback_p_q_equiv end
