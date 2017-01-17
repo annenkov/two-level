@@ -147,49 +147,6 @@ definition Pullback'_Pullback_equiv : Pullback' f g ≃ₛ Pullback f g:=
 
 open eq
 set_option pp.all true
-section equiv
-  -- TODO: move these definitions to facts.lean or another "library" file
-  open eq.ops
-  definition sigma_eq_congr {A: Type} {F : A → Type} {a a': A} {b : F a} {b' : F a'} :
-    (Σ (p : a = a'), ((p ▹ b) = b')) → ⟨ a, b ⟩ = ⟨a', b'⟩ :=
-      begin intro p, cases p with [p₁, p₂], cases p₁, cases p₂, esimp end
-
-  definition sigma_congr₁ [instance] {A B: Type} {F : B → Type} [φ : A ≃ₛ B]:
-  (Σ a : A, F (to_fun B a)) ≃ₛ Σ b : B, F b :=
-  equiv.mk
-  (λ x , ⟨ _, x.2 ⟩ )
-  (λ x,  ⟨ _, (eq.symm (right_inv A B _)) ▹ x.2⟩ )
-  (λ x, begin
-        cases x with [x₁, x₂],
-        cases φ with [f, g, l, r], unfold function.right_inverse at *, unfold function.left_inverse at *, esimp,
-        apply sigma_eq_congr, refine ⟨_,_⟩, apply l,
-        calc
-        (l x₁ ▹ ((r (f x₁))⁻¹ ▹ x₂))
-            = (r (f x₁))⁻¹ ▹ x₂ : sorry --apd (λ p, eq.rec x₂ (eq.symm(r (f x₁)))) (l x₁)
-        ... = x₂ : apd _ _
-        end)
-   begin
-     intro x, cases x with [p₁, p₂],
-     cases φ with [f, g, l, r], unfold function.right_inverse at *, unfold function.left_inverse at *,  esimp at *,
-     apply sigma_eq_congr, refine ⟨_,_⟩, apply r,
-     have H0 : r p₁ ▹ (r p₁)⁻¹ ▹ p₂ = r p₁ ▹ (λ x, (r p₁)⁻¹ ▹ p₂) p₂, from rfl,
-     have H : #eq.ops r p₁ ▹ (r p₁)⁻¹ ▹ p₂ = @eq.rec _ _ (λa, F a) p₂ _ (r p₁)⁻¹, from apd _ _,
-     have H' : (r p₁)⁻¹ ▹ p₂ = p₂, from apd _ _,
-     calc #eq.ops r p₁ ▹ (r p₁)⁻¹ ▹ p₂
-         = r p₁ ▹ (λ x, (r p₁)⁻¹ ▹ p₂) p₂ : rfl
-     ... = #eq.ops (r p₁)⁻¹ ▹ p₂ : sorry --H
-     ... = p₂ : sorry
-   end
-
-  definition sigma_congr₂ [instance] {A : Type} {F G : A → Type} [φ : Π a : A, F a ≃ₛ G a] :
-    (Σ a, F a) ≃ₛ Σ a, G a :=
-    equiv.mk sorry sorry sorry sorry
-
-  definition sigma_congr {A B : Type} {F : A → Type} {G : B → Type}
-    [φ : A ≃ₛ B] [φ' : Π a : A, F a ≃ₛ G (to_fun B a)] :
-    (Σ a, F a) ≃ₛ Σ a, G a := equiv.trans sigma_congr₂ sigma_congr₁
-
-end equiv
 
 open equiv poly_unit
 

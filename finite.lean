@@ -1,4 +1,4 @@
-import fibrant data.fin data.equiv facts algebra.category
+import fibrant data.fin data.equiv facts algebra.category facts
 
 open nat equiv function fin eq.ops sum unit prod.ops function
 
@@ -50,23 +50,101 @@ definition lemma3 {n : ℕ} {X : fin n → Fib}
         apply equiv_is_fibrant, apply (equiv.symm (pi_sum_fin_unit_equiv' HeqFinSum))}
 end
 
+namespace fin
+
+  definition lift_down {n : ℕ} (i : fin (nat.succ n)) (Hne : i ≠ maxi) : fin n := fin.mk (val i) (lt_max_of_ne_max Hne)
+
+  definition lift_succ_lift_down_inverse {n : ℕ} {i : fin (nat.succ n)} {Hne : i ≠ maxi} :
+    (lift_succ (lift_down i Hne)) = i :=
+    begin cases i, esimp end
+
+  open decidable equiv.ops
+
+  -- inspired by Paolo Capriotti's Agda implementation
+
+  definition fin_transpose {n} (i j k : fin n) : fin n :=
+    match fin.has_decidable_eq _ i k with
+    | inl _ := j
+    | inr _ := match fin.has_decidable_eq _ j k with
+               | inl _ := i
+               | inr _ := k
+               end
+  end
+
+  lemma fin_transpose_invol {n} {i j k : fin n} : fin_transpose i j (fin_transpose i j k) = k :=
+    begin
+      unfold fin_transpose, 
+      cases (fin.has_decidable_eq n i k) with [i_eq_k, i_ne_k]: esimp, 
+      cases (fin.has_decidable_eq n i j) with [i_eq_j, j_ne_k]: esimp, apply i_eq_j⁻¹ ⬝ i_eq_k,
+      cases (fin.has_decidable_eq n j j) with [j_eq_j, j_ne_j]: esimp, assumption, apply absurd rfl j_ne_j,
+      cases (fin.has_decidable_eq n j k) with [j_eq_k, j_ne_k]: esimp,
+      cases (fin.has_decidable_eq n i i) with [i_eq_i, i_ne_i]: esimp, assumption,
+      cases (fin.has_decidable_eq n j i) with [j_eq_i, j_ne_i]: esimp: apply absurd rfl i_ne_i,
+      cases (fin.has_decidable_eq n i k) with [i_eq_k, i_ne_k]: esimp, rewrite i_eq_k at i_ne_k, apply absurd rfl i_ne_k,
+      cases (fin.has_decidable_eq n j k) with [j_eq_k, j_ne_k]: esimp, apply absurd j_eq_k j_ne_k
+      end
+
+  definition fin_transpose_equiv [instance] {n} (i j : fin n) : fin n ≃ fin n:=
+  equiv.mk (fin_transpose i j) (fin_transpose i j) (λ k, fin_transpose_invol) (λ k, fin_transpose_invol)
+
+  definition fin_transpose_β₁ {n : ℕ} {i j : fin n} : fin_transpose i i j = j :=
+  begin 
+    unfold fin_transpose,
+    cases (fin.has_decidable_eq n i j) with [i_eq_j, i_ne_j]: esimp, apply i_eq_j    
+  end
+
+  definition fin_transpose_β₂ {n : ℕ} {i j : fin n} : fin_transpose i j j = i :=
+  begin 
+    unfold fin_transpose,
+    cases (fin.has_decidable_eq n i j) with [i_eq_j, i_ne_j]: esimp, apply i_eq_j⁻¹,
+    cases (fin.has_decidable_eq n j j) with [j_eq_j, j_ne_j]: esimp, apply absurd rfl j_ne_j
+  end
+
+  definition fin_transpose_inj {n : ℕ} {i j : fin n} : injective (fin_transpose i j) :=
+  begin    
+    refine (injective_of_left_inverse (@left_inv (fin n) (fin n) (fin_transpose_equiv _ _)))    
+  end
+
+  definition fin_remove_max_equiv {n : ℕ} (z : fin (nat.succ n)) : 
+    (Σ i : fin (nat.succ n), i ≠ z) ≃ (Σ i : fin (nat.succ n), i ≠ maxi) :=
+    begin
+    assert H : Π (x : fin (nat.succ n)), x = z ≃ (fin_transpose maxi z x = maxi),
+    begin 
+    intros, refine equiv.mk _ _ _ _, 
+    { intros Heq, rewrite Heq, apply fin_transpose_β₂ },
+    { intros, assert Heq : fin_transpose maxi z x = fin_transpose maxi z z, begin rewrite fin_transpose_β₂, assumption end,
+    apply fin_transpose_inj, assumption },
+    { unfold left_inverse, intro, esimp },
+    { unfold right_inverse, intro, esimp }
+    end,
+    refine @sigma_congr _ _ _ _ (fin_transpose_equiv maxi z) (λ x, @pi_congr _ _ _ _ _ (λ y, equiv.refl _))
+    end
+    
+    open sigma.ops
+    
+  definition fin_remove_max {n : ℕ} : (Σ i : fin (nat.succ n), i ≠ maxi) ≃ fin n :=
+    begin 
+      refine equiv.mk (λ j, lift_down _ j.2) (λi,⟨lift_succ i,lift_succ_ne_max⟩) _ _,
+      { unfold left_inverse, intro j, cases j, congruence, 
+        rewrite lift_succ_lift_down_inverse },
+      { unfold right_inverse, unfold left_inverse, intro i, cases i, unfold lift_down }
+    end
+
+  definition fin_remove_equiv {n : ℕ } (z : fin (nat.succ n)) 
+    : (Σ i : fin (nat.succ n), i ≠ z) ≃ fin n := fin_remove_max ∘ (fin_remove_max_equiv z)
+end fin
+
 -- some facts about (essentially) finite categories
 
 namespace fincat
   universe variables u v
   variables {C C' : Category.{u v}}
-  open category sigma.ops eq
+  open category sigma.ops eq equiv.ops
 
   definition is_finite [class] (C : Category) := Σ n, C ≃ fin n
   definition is_finite_eq [finC : is_finite C] := finC.2
 
-  attribute is_finite_eq [instance]
-
-  definition lift_down {n : ℕ} (i : fin (succ n)) (Hne : i ≠ maxi) : fin n := fin.mk (val i) (lt_max_of_ne_max Hne)
-
-  definition lift_succ_lift_down_inverse {n : ℕ} {i : fin (succ n)} {Hne : i ≠ maxi} :
-    (lift_succ (lift_down i Hne)) = i :=
-    begin cases i, esimp end
+  attribute is_finite_eq [instance]  
 
   definition fincat_ne_maxi {n : ℕ} {z : C} {f : C → fin (succ n)} (inj_f : injective f)
     (max_z : f z = maxi) {o : C} (p : o ≠ z) : f o ≠ (maxi : fin (succ n)) :=
@@ -91,4 +169,17 @@ namespace fincat
 
   definition has_decidable_eq [instance] [finC : is_finite C] {c c' : C} : decidable (c = c') :=
     decidable_of_decidable_of_iff (fin.has_decidable_eq _ _ _) eq_iff_finN_eq
+
+  definition fincat_ob_remove_fin_equiv {n : ℕ} (z : C) [φ : C ≃ fin (succ n)] : (Σ c, c ≠ z) ≃ fin n := 
+    begin
+    cases φ with [f,g,l,r], esimp at *,
+    assert Hequiv: (Σ c, c ≠ z) ≃ Σ (i : fin (succ n)), i ≠ f z, 
+      begin refine equiv.mk _ _ _ _,
+      intro j, cases j with [c, p_ne], existsi f c, intros, apply p_ne, apply (injective_of_left_inverse l), assumption,
+      intro i, cases i with [i', p_ne], existsi g i', intros, apply p_ne, rewrite -a, apply (r i')⁻¹,
+      unfold left_inverse, intro x, cases x with [c, p_ne], esimp, congruence, apply l,
+      unfold right_inverse, unfold left_inverse, unfold injective_of_left_inverse, intro x, 
+      cases x with [i, p_ne], esimp, congruence, apply r end,
+      apply (fin.fin_remove_equiv _) ∘ Hequiv
+    end
 end fincat

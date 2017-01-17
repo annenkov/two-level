@@ -27,16 +27,18 @@ namespace invcat
   -- Maybe rename the property?
   structure has_idreflect [class] (C D : Category) :=
     (φ : C ⇒ D)
-    (id_reflect : Π ⦃x y : C⦄ (f : x ⟶ y), φ x = φ y → (Σ (p : x = y), p ▹ f = id))
+    (id_reflect : Π ⦃x y : C⦄, φ x = φ y → (Σ (p : x = y), Π (f : x ⟶ y), p ▹ f = id))  
 
   structure invcat [class] (C : Category):=
     (id_reflect_ℕop : has_idreflect C ℕop)
 
-  open invcat
+  open invcat function
 
   definition endomorphism_is_id {C : Category} [invC : invcat C] {c : C} (f : c ⟶ c) : f = id :=
-  begin cases invC with H, cases H with [φ, id_r], apply (id_r f rfl).2 end
-
+  begin cases invC with H, cases H with [φ, id_r], apply (id_r rfl).2 end
+  
+  lemma idreflect_inj {C : Category} [idr : has_idreflect C ℕop] : injective (has_idreflect.φ C ℕop) := 
+    begin cases idr with [φ, idr_φ], esimp, unfold injective, intros x y H, cases (idr_φ H), assumption end
 end invcat
 
 open invcat
@@ -49,9 +51,10 @@ definition triv_funct_id_reflect [instance] : has_idreflect Category_one ℕop :
   has_idreflect.mk
     triv_funct
     begin
-      intros x y f Heq,
-      cases x, cases y, cases f,
-      existsi (eq.refl _), reflexivity
+      intros x y Heq,
+      cases x, cases y,      
+      existsi (eq.refl _), intro f, 
+      cases f, reflexivity
     end
 
 definition triv_cat_inverse [instance] : invcat Category_one := invcat.mk _
