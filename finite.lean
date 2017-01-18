@@ -73,8 +73,8 @@ namespace fin
 
   lemma fin_transpose_invol {n} {i j k : fin n} : fin_transpose i j (fin_transpose i j k) = k :=
     begin
-      unfold fin_transpose, 
-      cases (fin.has_decidable_eq n i k) with [i_eq_k, i_ne_k]: esimp, 
+      unfold fin_transpose,
+      cases (fin.has_decidable_eq n i k) with [i_eq_k, i_ne_k]: esimp,
       cases (fin.has_decidable_eq n i j) with [i_eq_j, j_ne_k]: esimp, apply i_eq_j⁻¹ ⬝ i_eq_k,
       cases (fin.has_decidable_eq n j j) with [j_eq_j, j_ne_j]: esimp, assumption, apply absurd rfl j_ne_j,
       cases (fin.has_decidable_eq n j k) with [j_eq_k, j_ne_k]: esimp,
@@ -88,49 +88,54 @@ namespace fin
   equiv.mk (fin_transpose i j) (fin_transpose i j) (λ k, fin_transpose_invol) (λ k, fin_transpose_invol)
 
   definition fin_transpose_β₁ {n : ℕ} {i j : fin n} : fin_transpose i i j = j :=
-  begin 
+  begin
     unfold fin_transpose,
-    cases (fin.has_decidable_eq n i j) with [i_eq_j, i_ne_j]: esimp, apply i_eq_j    
+    cases (fin.has_decidable_eq n i j) with [i_eq_j, i_ne_j]: esimp, apply i_eq_j
   end
 
   definition fin_transpose_β₂ {n : ℕ} {i j : fin n} : fin_transpose i j j = i :=
-  begin 
+  begin
     unfold fin_transpose,
     cases (fin.has_decidable_eq n i j) with [i_eq_j, i_ne_j]: esimp, apply i_eq_j⁻¹,
     cases (fin.has_decidable_eq n j j) with [j_eq_j, j_ne_j]: esimp, apply absurd rfl j_ne_j
   end
 
   definition fin_transpose_inj {n : ℕ} {i j : fin n} : injective (fin_transpose i j) :=
-  begin    
-    refine (injective_of_left_inverse (@left_inv (fin n) (fin n) (fin_transpose_equiv _ _)))    
+  begin
+    refine (injective_of_left_inverse (@left_inv (fin n) (fin n) (fin_transpose_equiv _ _)))
   end
 
-  definition fin_remove_max_equiv {n : ℕ} (z : fin (nat.succ n)) : 
+  -- removing any element from fin is equivalent to removing maximal element
+  -- we use transpositions defined above to prove this
+  definition fin_remove_max_equiv {n : ℕ} (z : fin (nat.succ n)) :
     (Σ i : fin (nat.succ n), i ≠ z) ≃ (Σ i : fin (nat.succ n), i ≠ maxi) :=
     begin
     assert H : Π (x : fin (nat.succ n)), x = z ≃ (fin_transpose maxi z x = maxi),
-    begin 
-    intros, refine equiv.mk _ _ _ _, 
+    begin
+    intros, refine equiv.mk _ _ _ _,
     { intros Heq, rewrite Heq, apply fin_transpose_β₂ },
     { intros, assert Heq : fin_transpose maxi z x = fin_transpose maxi z z, begin rewrite fin_transpose_β₂, assumption end,
-    apply fin_transpose_inj, assumption },
+      apply fin_transpose_inj, assumption },
     { unfold left_inverse, intro, esimp },
     { unfold right_inverse, intro, esimp }
     end,
     refine @sigma_congr _ _ _ _ (fin_transpose_equiv maxi z) (λ x, @pi_congr _ _ _ _ _ (λ y, equiv.refl _))
     end
-    
-    open sigma.ops
-    
+
+  open sigma.ops
+
+  -- removing maximal element gives us a set with smaller cardinality
+  -- we use it as a base case to remove any element and get a set with smaller cardinality
   definition fin_remove_max {n : ℕ} : (Σ i : fin (nat.succ n), i ≠ maxi) ≃ fin n :=
-    begin 
+    begin
       refine equiv.mk (λ j, lift_down _ j.2) (λi,⟨lift_succ i,lift_succ_ne_max⟩) _ _,
-      { unfold left_inverse, intro j, cases j, congruence, 
+      { unfold left_inverse, intro j, cases j, congruence,
         rewrite lift_succ_lift_down_inverse },
       { unfold right_inverse, unfold left_inverse, intro i, cases i, unfold lift_down }
     end
 
-  definition fin_remove_equiv {n : ℕ } (z : fin (nat.succ n)) 
+  -- now we can remove any element from fin using equivalences defined above
+  definition fin_remove_equiv {n : ℕ } (z : fin (nat.succ n))
     : (Σ i : fin (nat.succ n), i ≠ z) ≃ fin n := fin_remove_max ∘ (fin_remove_max_equiv z)
 end fin
 
@@ -144,7 +149,7 @@ namespace fincat
   definition is_finite [class] (C : Category) := Σ n, C ≃ fin n
   definition is_finite_eq [finC : is_finite C] := finC.2
 
-  attribute is_finite_eq [instance]  
+  attribute is_finite_eq [instance]
 
   definition fincat_ne_maxi {n : ℕ} {z : C} {f : C → fin (succ n)} (inj_f : injective f)
     (max_z : f z = maxi) {o : C} (p : o ≠ z) : f o ≠ (maxi : fin (succ n)) :=
@@ -170,15 +175,15 @@ namespace fincat
   definition has_decidable_eq [instance] [finC : is_finite C] {c c' : C} : decidable (c = c') :=
     decidable_of_decidable_of_iff (fin.has_decidable_eq _ _ _) eq_iff_finN_eq
 
-  definition fincat_ob_remove_fin_equiv {n : ℕ} (z : C) [φ : C ≃ fin (succ n)] : (Σ c, c ≠ z) ≃ fin n := 
+  definition fincat_ob_remove_fin_equiv {n : ℕ} (z : C) [φ : C ≃ fin (succ n)] : (Σ c, c ≠ z) ≃ fin n :=
     begin
     cases φ with [f,g,l,r], esimp at *,
-    assert Hequiv: (Σ c, c ≠ z) ≃ Σ (i : fin (succ n)), i ≠ f z, 
+    assert Hequiv: (Σ c, c ≠ z) ≃ Σ (i : fin (succ n)), i ≠ f z,
       begin refine equiv.mk _ _ _ _,
       intro j, cases j with [c, p_ne], existsi f c, intros, apply p_ne, apply (injective_of_left_inverse l), assumption,
       intro i, cases i with [i', p_ne], existsi g i', intros, apply p_ne, rewrite -a, apply (r i')⁻¹,
       unfold left_inverse, intro x, cases x with [c, p_ne], esimp, congruence, apply l,
-      unfold right_inverse, unfold left_inverse, unfold injective_of_left_inverse, intro x, 
+      unfold right_inverse, unfold left_inverse, unfold injective_of_left_inverse, intro x,
       cases x with [i, p_ne], esimp, congruence, apply r end,
       apply (fin.fin_remove_equiv _) ∘ Hequiv
     end
