@@ -107,18 +107,17 @@ namespace fin
 
   -- removing any element from fin is equivalent to removing maximal element
   -- we use transpositions defined above to prove this
-  definition fin_remove_max_equiv {n : ℕ} (z : fin (nat.succ n)) :
+  definition fin_remove_max_equiv [instance] {n : ℕ} (z : fin (nat.succ n)) :
     (Σ i : fin (nat.succ n), i ≠ z) ≃ (Σ i : fin (nat.succ n), i ≠ maxi) :=
     begin
     assert H : Π (x : fin (nat.succ n)), x = z ≃ (fin_transpose maxi z x = maxi),
     begin
-    intros, refine equiv.mk _ _ _ _,
-    { intros Heq, rewrite Heq, apply fin_transpose_β₂ },
+    intros, refine equiv.mk (λ Heq, Heq⁻¹ ▹ fin_transpose_β₂) _ _ _,
     { intros, assert Heq : fin_transpose maxi z x = fin_transpose maxi z z, begin rewrite fin_transpose_β₂, assumption end,
       apply fin_transpose_inj, assumption },
     { unfold left_inverse, intro, esimp },
     { unfold right_inverse, intro, esimp }
-    end,
+    end,    
     refine @sigma_congr _ _ _ _ (fin_transpose_equiv maxi z) (λ x, @pi_congr _ _ _ _ _ (λ y, equiv.refl _))
     end
 
@@ -126,7 +125,7 @@ namespace fin
 
   -- removing maximal element gives us a set with smaller cardinality
   -- we use it as a base case to remove any element and get a set with smaller cardinality
-  definition fin_remove_max {n : ℕ} : (Σ i : fin (nat.succ n), i ≠ maxi) ≃ fin n :=
+  definition fin_remove_max [instance] {n : ℕ} : (Σ i : fin (nat.succ n), i ≠ maxi) ≃ fin n :=
     begin
       refine equiv.mk (λ j, lift_down _ j.2) (λi,⟨lift_succ i,lift_succ_ne_max⟩) _ _,
       { unfold left_inverse, intro j, cases j, congruence,
