@@ -24,6 +24,8 @@ open eq
 
 namespace equiv
 
+  open eq.ops sigma.ops function
+
   variables {A A' : Type}
 
   definition pi_congr₁ [instance] {F' : A'  → Type} [φ : A ≃ A']
@@ -45,7 +47,6 @@ namespace equiv
   definition pi_congr [instance] {F : A → Type} {F' : A' → Type} [φ : A ≃ A'] [φ' : Π a, F a ≃ F' (φ ∙ a)] :=
     equiv.trans (@pi_congr₂ _ _ _ φ') (@pi_congr₁ _ _ _ φ)
 
-  open eq.ops sigma.ops
   definition sigma_eq_congr {A: Type} {F : A → Type} {a a': A} {b : F a} {b' : F a'} :
     (Σ (p : a = a'), ((p ▹ b) = b')) → ⟨ a, b ⟩ = ⟨a', b'⟩ :=
       begin intro p, cases p with [p₁, p₂], cases p₁, cases p₂, esimp end
@@ -84,6 +85,18 @@ namespace equiv
   definition sigma_congr {A B : Type} {F : A → Type} {G : B → Type}
     [φ : A ≃ B] [φ' : Π a : A, F a ≃ G (to_fun B a)] :
     (Σ a, F a) ≃ Σ a, G a := equiv.trans sigma_congr₂ sigma_congr₁
+
+  definition sigma_swap {A B : Type} {F : A → B → Type} :
+    (Σ (a : A) (b : B), F a b) ≃ Σ (b : B) (a : A), F a b :=
+    equiv.mk (λ x, ⟨x.2.1,⟨x.1,x.2.2⟩⟩)
+             (λ x, ⟨x.2.1,⟨x.1,x.2.2⟩⟩)
+             (λ x, by cases x with [p1,p2]; cases p2; reflexivity)
+             (λ x, by cases x with [p1,p2]; cases p2; reflexivity)
+
+  definition iff_impl_equiv {A B : Prop} (Hiff : A ↔ B) : A ≃ B :=
+  match Hiff with
+  | iff.intro f g := equiv.mk f g (λx, proof_irrel _ _) (λx, proof_irrel _ _)
+  end
 
 end equiv
 
