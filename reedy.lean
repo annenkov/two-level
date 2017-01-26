@@ -51,7 +51,7 @@ section reedy
   definition C_without_z (z : C) : Category := Mk (subcat C (λ c, c ≠ z))
 
   -- (Danil) I have to use apply tactic, as it allows to infer correct implicits
-  definition Functor_from_C' [reducible] [unfold_full] (z : C) (X : C ⇒ D) : C_without_z z ⇒ D :=
+  definition Functor_from_C' [reducible] (z : C) (X : C ⇒ D) : C_without_z z ⇒ D :=
   ⦃ functor,
     object := λ ob, X (obj ob),
     morphism := λ a b f, by apply X f,
@@ -119,7 +119,7 @@ section reedy
   end
   
   open invcat
-  
+
   definition no_incoming_non_id_arrows (z : C) {y : C} {φ : C ⇒ ℕop} {max_rank : φ y ≤ φ z} [inj_φ : injective φ]
     : ¬ ∃ (f : y ⟶ z), y ≠ z :=
     begin intro H, cases H with [f, p],
@@ -128,39 +128,122 @@ section reedy
     apply p, assumption
     end
 
-  definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invcat C] [rfibX : is_reedy_fibrant X]
+  definition Functor_from_C'_eq (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) :
+    X (@obj _ _ x') = (object (Functor_from_C' z X) x') := 
+    begin esimp end
+
+  --set_option pp.implicit true
+  
+    open poly_unit
+    open reduced_coslice
+    open reduced_coslice.red_coslice_obs
+
+    -- for any object "a" from z//C (which is an arrow z⟶y with extra property) we show that codomain y cannot be z
+    -- we show it using the definition of reduced coslice and the fact that C is an inverse category
+    definition reduced_coslice_ne (z : C) (a : z//C) [invC : invcat C] : to a ≠ z :=
+    begin
+      cases a with [y, c_hom_to, f_not_id], esimp at *,
+      intro p, cases p,
+      apply f_not_id rfl,
+      cases invC, cases id_reflect_ℕop,
+      apply (id_reflect rfl).2
+    end
+
+  open reduced_coslice reduced_coslice.coslice_obs
+
+  definition red_coslice_to_C' {z} {x : C_without_z z} (o : x//C_without_z z) : red_coslice_obs C (obj x) :=
+  begin 
+    cases o with [t,f,non_id],
+    refine red_coslice_obs.mk (obj t) f _, intros p, intros q, apply non_id (injective_obj p), cases (injective_obj p), esimp, 
+    rewrite q 
+  end
+
+  lemma inj_subcat_obj_mk₁ {t t'} {P : C → Prop} {p : P t} {p' : P t'} :
+  @subcat_obj.mk C (λx, P x) t p = @subcat_obj.mk C (λx, P x) t' p' → t = t' := 
+    begin intro Heq, apply subcat_obj.no_confusion Heq (λ x y, x) end
+  
+  definition red_coslice_from_C' [reducible] {z} {x : C_without_z z} {φ : C ⇒ ℕop} {max_rank : φ x ≤ φ z} 
+    [inj_φ : injective φ] [finC : is_finite C] (o : (obj x)//C) : x//C_without_z z :=
+  begin    
+    cases o with [t,f,non_id], cases x with [x', x'_ne], esimp at *,
+    cases (@fincat.has_decidable_eq _ finC t z) with [t_eq_z, t_ne_z], cases t_eq_z, exfalso,
+    apply @no_incoming_non_id_arrows _ z _ φ max_rank inj_φ, existsi f, apply x'_ne,
+    let t' := subcat_obj.mk t t_ne_z,
+    refine red_coslice_obs.mk _ _ _, apply t', apply f, intros,
+    assert q : x' = t, begin refine inj_subcat_obj_mk₁ p end,
+    apply non_id q, cases q, esimp, apply a,    
+  end
+
+  set_option pp.binder_types true
+
+  definition matching_obj_X' (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) [invcat C] :
+    matching_object X (obj x') → matching_object (Functor_from_C' z X) x' :=
+    begin
+    intros N, cases N with [η, NatSq], esimp at *,
+    refine natural_transformation.mk _ _, intro o, esimp at *, intro uu,
+    { cases o with [t,f,non_id], esimp at *,
+      assert H : object (X∘f forget C (obj x')) (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ f non_id)) =
+        object (Functor_from_C' z X∘f forget (C_without_z z) x') (@red_coslice_obs.mk _ _ _ _ f non_id),
+        begin unfold functor.compose end,
+      rewrite -H, apply η (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ f non_id)) poly_unit.star },
+    { intros, unfold functor.compose, cases f with [f1,Heq], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
+      cases a with [t,ff,non_id], cases b with [t',ff', non_id'], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
+      unfold Functor_from_C', unfold forget,  apply funext,
+      intros, cases x,
+      assert H : (@morphism C _ X _ _ f1) (η (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ ff non_id)) poly_unit.star) =
+                   η (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ ff' non_id')) poly_unit.star, cases Heq,
+      apply sorry, apply sorry }
+    end
+
+  definition matching_obj_from_X' (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) [invcat C] [finC : is_finite C]
+    {φ : C ⇒ ℕop} {max_rank : φ x' ≤ φ z} [inj_φ : injective φ] :
+    matching_object (Functor_from_C' z X) x' → matching_object X (obj x') :=
+    begin     
+    intros N, cases N with [η, NatSq], esimp at *,
+    refine natural_transformation.mk _ _, intro o, esimp at *, intro uu,
+    { cases o with [t,f,non_id], esimp at *, unfold functor.compose at *, unfold forget at *,
+      unfold red_coslice_obs.to_coslice_obs at *, unfold Functor_from_C' at η,
+      have o' : object X (obj (red_coslice_obs.to (@red_coslice_from_C' _ _ _ φ max_rank inj_φ _ (red_coslice_obs.mk t f non_id)))), 
+      from η (red_coslice_from_C' (mk t f non_id)) poly_unit.star,
+      assert H :
+      object X (obj (red_coslice_obs.to (@red_coslice_from_C' _ _ _ φ max_rank inj_φ _ (red_coslice_obs.mk t f non_id)))) = object X t,
+      begin apply ap (object X), unfold red_coslice_from_C', cases x' with [x', x'_ne], esimp, 
+      cases @fincat.has_decidable_eq C _ t z, 
+      { cases a, esimp, exfalso,
+        apply @no_incoming_non_id_arrows _ z _ φ max_rank inj_φ, existsi f, esimp, apply x'_ne },
+      { esimp }
+      end, rewrite -H, exact o' },
+      { intros, unfold functor.compose, cases f with [f1,Heq], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
+        cases a with [t,ff,non_id], cases b with [t',ff', non_id'], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
+        unfold Functor_from_C', unfold forget,  apply funext,
+        intros, cases x,        
+         apply sorry}
+    end
+  
+  definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invC : invcat C]
+    {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} [inj_φ : injective φ]
+    [rfibX : is_reedy_fibrant X] [finC : is_finite C]
     : is_reedy_fibrant (Functor_from_C' z X)  :=
       begin
         --cases rfibX,
-        unfold is_reedy_fibrant at *, intro x,        
+        unfold is_reedy_fibrant at *, intro x,
         unfold is_fibration_alt at *, intro b,
-        unfold fibreₛ,
-        assert MO : matching_object X (obj x),
-        begin
-        apply sorry
-        -- cases b with [η, NatSq],
-        -- refine natural_transformation.mk _ _, intro o, esimp at *,
-        end,
+        --unfold fibreₛ,
+        have invC' : invcat C, from invC,
+        -- cases invC' with [idr], cases idr,
+        let MO := (@matching_obj_from_X' C X z x _ _ φ (max_rank x) inj_φ b),
         assert isfibX' : is_fibrant (fibreₛ (matching_obj_map X (obj x)) MO), begin apply (rfibX x MO) end,
-        assert MO_map : X x → matching_object X (obj x), begin apply sorry end,
+        unfold matching_object at b, unfold functor.compose at b, unfold forget at b,
+        --assert Hfeq: ∀ a, (matching_obj_map X (obj x) a) = matching_obj_map (Functor_from_C' z X) a,
+        assert Hfeq': (fibreₛ (matching_obj_map X (obj x)) MO) ≃ₛ (fibreₛ (matching_obj_map (Functor_from_C' z X) x) b),
+        begin
+          unfold fibreₛ, apply @sigma_congr₂, intros, unfold matching_obj_from_X', cases b, esimp,
+          --refine equiv.mk _ _ _ _, apply equiv.refl, intro p, induction p, esimp,
+          apply sorry
+        end,
         apply sorry
         --apply rfibX x MO,
-      end
-
-  open poly_unit
-  open reduced_coslice
-  open reduced_coslice.red_coslice_obs
-
-  -- for any object "a" from z//C (which is an arrow z⟶y with extra property) we show that codomain y cannot be z
-  -- we show it using definition of reduced coslice and fact that C is an inverse category
-  definition reduced_coslice_ne (z : C) (a : z//C) [invC : invcat C] : to a ≠ z :=
-  begin
-    cases a with [y, c_hom_to, f_not_id], esimp at *,
-    intro p, cases p,
-    apply f_not_id rfl,
-    cases invC, cases id_reflect_ℕop,
-    apply (id_reflect rfl).2
-  end
+      end  
 
   -- map from limit of X restricted to C'
   definition map_L_to_Mz (z : C) (X : C ⇒ Type_category) [invC : invcat C]
@@ -212,6 +295,7 @@ section reedy
       begin unfold map_L_to_Mz_alt, unfold natural_map, cases y, esimp
       end
 
+  -- TODO: rename
   definition lemma2 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
     {c_z : X z}
     {y : C_without_z z} {f : z ⟶ obj y} :
@@ -320,7 +404,8 @@ section reedy
     { unfold right_inverse, unfold left_inverse, intro x, cases x, reflexivity }
     end
 
-  definition fibrant_limit [invC : invcat C] [finC : is_finite C] (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant X) :
+  definition fibrant_limit [invC : invcat C] [finC : is_finite C] 
+    (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype.{max 1 u} X)) :=
     begin
       cases finC with [n, ψ],
@@ -357,11 +442,13 @@ section reedy
          -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
          -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply two_piece_limit_pullback_p_q_equiv end
-         ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : sorry,
+         ... ≃ₛ (Σ d (c_z : X z), p d = q c_z) : equiv.sigma_swap
+         ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : by apply @sigma_congr₂; intros; apply @sigma_congr₂; intros; 
+                                                     apply (iff_impl_equiv (iff.intro eq.symm eq.symm)),
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
         -- that L is fibrant (from IH)
-        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from @Functor_from_C'_reedy_fibrant _ z X _ rfib,
+        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from @Functor_from_C'_reedy_fibrant _ z X _ φ z_max_φ inj_φ rfib ⟨_,ψ⟩,
         assert isFibL: is_fibrant (lim_restricted X z),
           begin
           refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'
