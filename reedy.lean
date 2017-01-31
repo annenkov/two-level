@@ -148,101 +148,149 @@ section reedy
       cases invC, cases id_reflect_ℕop,
       apply (id_reflect rfl).2
     end
-
-  open reduced_coslice reduced_coslice.coslice_obs
-
-  definition red_coslice_to_C' {z} {x : C_without_z z} (o : x//C_without_z z) : red_coslice_obs C (obj x) :=
-  begin 
-    cases o with [t,f,non_id],
-    refine red_coslice_obs.mk (obj t) f _, intros p, intros q, apply non_id (injective_obj p), cases (injective_obj p), esimp, 
-    rewrite q 
-  end
-
-  lemma inj_subcat_obj_mk₁ {t t'} {P : C → Prop} {p : P t} {p' : P t'} :
-  @subcat_obj.mk C (λx, P x) t p = @subcat_obj.mk C (λx, P x) t' p' → t = t' := 
-    begin intro Heq, apply subcat_obj.no_confusion Heq (λ x y, x) end
   
-  definition red_coslice_from_C' [reducible] {z} {x : C_without_z z} {φ : C ⇒ ℕop} {max_rank : φ x ≤ φ z} 
-    [inj_φ : injective φ] [finC : is_finite C] (o : (obj x)//C) : x//C_without_z z :=
-  begin    
-    cases o with [t,f,non_id], cases x with [x', x'_ne], esimp at *,
-    cases (@fincat.has_decidable_eq _ finC t z) with [t_eq_z, t_ne_z], cases t_eq_z, exfalso,
-    apply @no_incoming_non_id_arrows _ z _ φ max_rank inj_φ, existsi f, apply x'_ne,
-    let t' := subcat_obj.mk t t_ne_z,
-    refine red_coslice_obs.mk _ _ _, apply t', apply f, intros,
-    assert q : x' = t, begin refine inj_subcat_obj_mk₁ p end,
-    apply non_id q, cases q, esimp, apply a,    
-  end
+  section MO_facts
+    open reduced_coslice reduced_coslice.coslice_obs
+    
+    variables {z : C} {x : C_without_z z}
+              {φ : C ⇒ ℕop} {inj_φ : injective φ}
+              {max_rank : φ x ≤ φ z}
+              [is_finite C] [invcat C]
+              (X : C ⇒ Type_category)
 
-  set_option pp.binder_types true
+    definition red_coslice_to_C' (o : x//C_without_z z) : red_coslice_obs C (obj x) :=
+    begin 
+      cases o with [t,f,non_id],
+      refine red_coslice_obs.mk (obj t) f _, intros p, intros q, apply non_id (injective_obj p), cases (injective_obj p), esimp, 
+      rewrite q 
+    end
+  
+    lemma inj_subcat_obj_mk₁ {t t'} {P : C → Prop} {p : P t} {p' : P t'} :
+    @subcat_obj.mk C (λx, P x) t p = @subcat_obj.mk C (λx, P x) t' p' → t = t' := 
+      begin intro Heq, apply subcat_obj.no_confusion Heq (λ x y, x) end
 
-  definition matching_obj_X' (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) [invcat C] :
-    matching_object X (obj x') → matching_object (Functor_from_C' z X) x' :=
+    include φ max_rank inj_φ
+
+    definition red_coslice_ne_z (t : C) (f : x ⟶ t) : t ≠ z :=
     begin
-    intros N, cases N with [η, NatSq], esimp at *,
-    refine natural_transformation.mk _ _, intro o, esimp at *, intro uu,
-    { cases o with [t,f,non_id], esimp at *,
-      assert H : object (X∘f forget C (obj x')) (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ f non_id)) =
-        object (Functor_from_C' z X∘f forget (C_without_z z) x') (@red_coslice_obs.mk _ _ _ _ f non_id),
-        begin unfold functor.compose end,
-      rewrite -H, apply η (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ f non_id)) poly_unit.star },
-    { intros, unfold functor.compose, cases f with [f1,Heq], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
-      cases a with [t,ff,non_id], cases b with [t',ff', non_id'], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
-      unfold Functor_from_C', unfold forget,  apply funext,
-      intros, cases x,
-      assert H : (@morphism C _ X _ _ f1) (η (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ ff non_id)) poly_unit.star) =
-                   η (red_coslice_to_C' (@red_coslice_obs.mk _ _ _ _ ff' non_id')) poly_unit.star, cases Heq,
-      apply sorry, apply sorry }
+      cases x with [x', x'_ne], esimp at *,
+      cases (@fincat.has_decidable_eq _ _ t z) with [t_eq_z, t_ne_z], cases t_eq_z, exfalso,
+      apply @no_incoming_non_id_arrows _ z x' φ max_rank inj_φ, existsi f, apply x'_ne, apply t_ne_z
+    end
+    
+    definition red_coslice_from_C' [reducible] (o : (obj x)//C) : x//C_without_z z :=
+    begin
+      cases o with [t,f,non_id], esimp at *, 
+      cases x with [x', x'_ne], esimp at *,      
+      let t' := subcat_obj.mk t
+      (@red_coslice_ne_z _ z (mk x' x'_ne) φ inj_φ max_rank _ _ t f),
+      refine red_coslice_obs.mk _ _ _, apply t', apply f, intros p,
+      intros q,      
+      assert q1 : x' = t, begin apply subcat_obj.no_confusion p (λ x y, x) end,
+      apply non_id q1, cases q1, esimp at *, apply q
+    end    
+  
+    definition red_coslice_without_z_equiv : (obj x)//C ≃ₛ (x//C_without_z z) :=
+    equiv.mk (@red_coslice_from_C' C _ _ _ inj_φ max_rank _ _) red_coslice_to_C'
+    begin
+      intros y, cases y  with [y,f,non_id],
+      cases x with [x, x_ne], esimp      
+    end 
+    sorry
+
+    definition red_coslice_eq_1 [reducible] [unfold_full] :
+      ∀ y, object X (obj (red_coslice_obs.to ((@red_coslice_from_C' C _ _ _ inj_φ max_rank _ _) y))) = X (red_coslice_obs.to y) := 
+      begin
+        intro, cases y with [y,f,y_ne], cases x with [x, x_ne], esimp        
+      end
+
+    definition MO'_to_MO_map : 
+    matching_object (Functor_from_C' z X) x → matching_object X (obj x) :=
+    begin
+      intros a, refine natural_transformation.mk _ _,
+      intros y uu, unfold functor.compose at *, unfold forget at *, esimp at *, unfold red_coslice_obs.to_coslice_obs,
+      rewrite -(@red_coslice_eq_1 _ _ _ _ inj_φ max_rank _ _ X y), refine (natural_map a) _ poly_unit.star,
+      intros, esimp, unfold functor.compose at *, unfold forget at *, esimp at *, apply sorry
     end
 
-  definition matching_obj_from_X' (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) [invcat C] [finC : is_finite C]
-    {φ : C ⇒ ℕop} {max_rank : φ x' ≤ φ z} [inj_φ : injective φ] :
-    matching_object (Functor_from_C' z X) x' → matching_object X (obj x') :=
-    begin     
-    intros N, cases N with [η, NatSq], esimp at *,
-    refine natural_transformation.mk _ _, intro o, esimp at *, intro uu,
-    { cases o with [t,f,non_id], esimp at *, unfold functor.compose at *, unfold forget at *,
-      unfold red_coslice_obs.to_coslice_obs at *, unfold Functor_from_C' at η,
-      have o' : object X (obj (red_coslice_obs.to (@red_coslice_from_C' _ _ _ φ max_rank inj_φ _ (red_coslice_obs.mk t f non_id)))), 
-      from η (red_coslice_from_C' (mk t f non_id)) poly_unit.star,
-      assert H :
-      object X (obj (red_coslice_obs.to (@red_coslice_from_C' _ _ _ φ max_rank inj_φ _ (red_coslice_obs.mk t f non_id)))) = object X t,
-      begin apply ap (object X), unfold red_coslice_from_C', cases x' with [x', x'_ne], esimp, 
-      cases @fincat.has_decidable_eq C _ t z, 
-      { cases a, esimp, exfalso,
-        apply @no_incoming_non_id_arrows _ z _ φ max_rank inj_φ, existsi f, esimp, apply x'_ne },
-      { esimp }
-      end, rewrite -H, exact o' },
-      { intros, unfold functor.compose, cases f with [f1,Heq], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
-        cases a with [t,ff,non_id], cases b with [t',ff', non_id'], unfold red_coslice_obs.to_coslice_obs at *, esimp at *,
-        unfold Functor_from_C', unfold forget,  apply funext,
-        intros, cases x,        
-         apply sorry}
+    definition MO_equiv : matching_object (Functor_from_C' z X) x ≃ₛ matching_object X (obj x) :=
+    begin
+      let C' := C_without_z z,
+      let X' := Functor_from_C' z X,
+      let  ψ := @red_coslice_without_z_equiv C z x φ inj_φ max_rank _ _,
+      
+      -- we got two commuting triangles using equivalence  ((obj x)//C) ≃ (x//C')
+      assert Htr1 : ∀ y, (X' ∘f !forget) (@to_fun _ _ ψ y) = (X ∘f !forget) y,
+        begin intro, unfold functor.compose, unfold forget, unfold Functor_from_C',
+          unfold red_coslice_obs.to_coslice_obs, esimp, refine red_coslice_eq_1 _ _, assumption 
+        end,      
+      assert Htr2 : ∀ y, (X ∘f !forget) (@inv_fun _ _ ψ y) = (X' ∘f (!forget)) y, 
+        begin intro, unfold functor.compose, unfold forget, unfold Functor_from_C',
+
+      unfold red_coslice_obs.to_coslice_obs, cases y with [y,f,y_ne], esimp end,
+      unfold matching_object,
+      refine equiv.mk (@MO'_to_MO_map _ _ _ _ inj_φ max_rank _ _ X) _ _ _,      
+      { intros a, cases a, refine natural_transformation.mk _ _,
+        intros y uu, unfold functor.compose at *, unfold forget at *, esimp at *,
+        rewrite -Htr2, refine η (@inv_fun _ _ ψ y) star,
+        apply sorry },
+      { intros a, refine nat_trans_eq, cases a with [η, NatSq], esimp, 
+        rewrite natural_map_proj, esimp,
+        apply funext, intro y, apply funext, intro uu,
+         esimp, cases uu, apply sorry
+          -- calc
+          --     Htr2 y ▹ Htr1 (@inv_fun _ _ _ y) ▹ η (@to_fun _ _ _ (@inv_fun (x//C) _ _ y)) star                 
+          --         = Htr1 (@inv_fun _ _ ψ y) ▹ η _ star : sorry -- apd _ (H2 _)
+          --     ... = η y star : sorry,
+              },
+      { apply sorry }      
     end
+
+  end MO_facts
+  
   
   definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invC : invcat C]
     {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} [inj_φ : injective φ]
     [rfibX : is_reedy_fibrant X] [finC : is_finite C]
     : is_reedy_fibrant (Functor_from_C' z X)  :=
       begin
-        --cases rfibX,
-        unfold is_reedy_fibrant at *, intro x,
-        unfold is_fibration_alt at *, intro b,
-        --unfold fibreₛ,
-        have invC' : invcat C, from invC,
-        -- cases invC' with [idr], cases idr,
-        let MO := (@matching_obj_from_X' C X z x _ _ φ (max_rank x) inj_φ b),
-        assert isfibX' : is_fibrant (fibreₛ (matching_obj_map X (obj x)) MO), begin apply (rfibX x MO) end,
-        unfold matching_object at b, unfold functor.compose at b, unfold forget at b,
-        --assert Hfeq: ∀ a, (matching_obj_map X (obj x) a) = matching_obj_map (Functor_from_C' z X) a,
+        let C' := C_without_z z,
+        let X' := Functor_from_C' z X,
+        unfold is_reedy_fibrant at *,
+        unfold is_fibration_alt at *,
+        intros x b,
+        have invC' : invcat C, from invC,        
+        let Hequiv := (@MO_equiv C z x φ inj_φ (max_rank x) _ _ X),
+        let MO := @to_fun _ _ Hequiv b,
+        assert isfibX' : is_fibrant (fibreₛ (matching_obj_map X (obj x)) (@to_fun _ _ Hequiv b)), begin apply (rfibX x MO) end,
         assert Hfeq': (fibreₛ (matching_obj_map X (obj x)) MO) ≃ₛ (fibreₛ (matching_obj_map (Functor_from_C' z X) x) b),
         begin
-          unfold fibreₛ, apply @sigma_congr₂, intros, unfold matching_obj_from_X', cases b, esimp,
-          --refine equiv.mk _ _ _ _, apply equiv.refl, intro p, induction p, esimp,
-          apply sorry
+          unfold fibreₛ, apply @sigma_congr₂, intros, esimp,
+          apply iff_impl_equiv, refine iff.intro _ _,
+          { intros p,
+            calc
+                  matching_obj_map X' x a
+                = @inv_fun _ _ Hequiv (matching_obj_map X (obj x) a) : 
+                    begin refine nat_trans_eq, apply funext, intro y, apply funext, intro uu, 
+                        cases y, cases uu, esimp end
+            ... = @inv_fun _ _ Hequiv (@to_fun _ _ Hequiv b) : ap _ p
+            ... = b : @left_inv _ _ _
+            },
+          { intros p,
+            calc
+                 matching_obj_map X (obj x) a
+                 = Hequiv ∙ (matching_obj_map X' x a) : 
+                 begin 
+                   unfold fn, refine nat_trans_eq, apply funext, intro y, apply funext, intro uu, 
+                  cases uu, esimp at *,
+                  assert H : morphism X (hom_to y) a =  
+                  natural_map ((@MO'_to_MO_map _ _ _ _ inj_φ (max_rank x) _ _ X) 
+                  (matching_obj_map (Functor_from_C' z X) x a)) y star, unfold MO'_to_MO_map, 
+                  rewrite natural_map_proj, cases y, esimp, cases x, esimp,
+                  apply H end
+           ... = Hequiv ∙ b : ap _ p }
         end,
-        apply sorry
-        --apply rfibX x MO,
+        apply equiv_is_fibrant Hfeq'
       end  
 
   -- map from limit of X restricted to C'
@@ -435,12 +483,12 @@ section reedy
         apply equiv_is_fibrant, apply equiv.symm,
 
         calc
-         (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
+                (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
-                (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
-                (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ inj_φ z_max_φ
-         -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
-         -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
+                 (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
+                 (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ inj_φ z_max_φ
+                 -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
+                 -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply two_piece_limit_pullback_p_q_equiv end
          ... ≃ₛ (Σ d (c_z : X z), p d = q c_z) : equiv.sigma_swap
          ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : by apply @sigma_congr₂; intros; apply @sigma_congr₂; intros; 

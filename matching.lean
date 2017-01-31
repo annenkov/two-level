@@ -86,5 +86,12 @@ namespace matching_object
         unfold red_coslice_obs.to_coslice_obs at *, rewrite -tr,
         apply eq.symm, apply happly (respect_comp X f_hom (hom_to a)) x }
     end
+  open natural_transformation
+  
+  definition nat_map_matching_obj_map {C : Category.{1 1}} [invC : invcat C] (X : C ⇒ Type_category) (z : C) (x : X z) :
+  natural_map (matching_obj_map X z x) = (λ a u, X (hom_to a) x) := 
+  begin
+    reflexivity
+  end
 
 end matching_object
