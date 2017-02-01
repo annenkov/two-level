@@ -161,8 +161,15 @@ structure is_contr (X : Type)[is_fibrant X] := mk ::
   (center : X)
   (contraction : Π (x : X), center ~ x)
 
+open sigma.ops is_contr
+
 definition is_contr_equiv [instance] {X : Type}[is_fibrant X] :
-  (Σ (c : X), Π (x : X), c ~ x) ≃ₛ is_contr X := sorry
+  (Σ (c : X), Π (x : X), c ~ x) ≃ₛ is_contr X := 
+  equiv.mk 
+    (λ a, is_contr.mk a.1 (λx, a.2 x)) 
+    (λ a, ⟨center a,(λx, contraction a x)⟩) 
+    (λ a, by cases a; reflexivity)
+    (λ a, by cases a; reflexivity)
 
 definition is_contr_is_fibrant [instance] (X : Type)[is_fibrant X] : is_fibrant (is_contr X) :=
   equiv_is_fibrant is_contr_equiv
