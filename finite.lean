@@ -118,7 +118,7 @@ namespace fin
     { unfold left_inverse, intro, esimp },
     { unfold right_inverse, intro, esimp }
     end,    
-    refine @sigma_congr _ _ _ _ (fin_transpose_equiv maxi z) (λ x, @pi_congr _ _ _ _ _ (λ y, equiv.refl _))
+    refine @sigma_congr _ _ _ _ (fin_transpose_equiv maxi z) (λ x, @pi_congr _ _ _ _ (H _) (λ y, equiv.refl _))
     end
 
   open sigma.ops

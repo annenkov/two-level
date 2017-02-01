@@ -158,16 +158,26 @@ section reedy
               [is_finite C] [invcat C]
               (X : C ⇒ Type_category)
 
-    definition red_coslice_to_C' (o : x//C_without_z z) : red_coslice_obs C (obj x) :=
+    definition red_coslice_to_C' (o : x//C_without_z z) : (obj x)//C :=
     begin 
       cases o with [t,f,non_id],
-      refine red_coslice_obs.mk (obj t) f _, intros p, intros q, apply non_id (injective_obj p), cases (injective_obj p), esimp, 
-      rewrite q 
+      refine red_coslice_obs.mk (obj t) f _, intros p, intros q,
+      assert H : @eq (C_without_z z) x t, begin cases x, cases t, esimp at *, congruence, assumption end,      
+      apply non_id H, cases H, esimp, apply q
     end
-  
-    lemma inj_subcat_obj_mk₁ {t t'} {P : C → Prop} {p : P t} {p' : P t'} :
-    @subcat_obj.mk C (λx, P x) t p = @subcat_obj.mk C (λx, P x) t' p' → t = t' := 
-      begin intro Heq, apply subcat_obj.no_confusion Heq (λ x y, x) end
+
+    definition red_coslice_to_C'_hom (a b : x//C_without_z z) (f : a ⟶ b) : (red_coslice_to_C' a) ⟶ (red_coslice_to_C' b) := 
+    begin 
+    cases f with [f, comm_tr], cases a with [a,g,non_id], cases b with [b,g', non_id'], 
+    unfold red_coslice_obs.to_coslice_obs at *, unfold red_coslice_to_C' at *, esimp at *,
+    apply ⟨f,comm_tr⟩
+    end    
+
+    -- (Danil) I pack this property as a lemma to prevent unnessesary unfolding
+    -- which sometimes leads to errors when unfolding definitions dependent on this one
+    lemma subcat_obj_eq {c c1: C} {P : C → Prop} {p : P c} {p1 : P c1} 
+      (q : subcat_obj.mk c p = subcat_obj.mk c1 p1) : c = c1 :=
+      begin refine subcat_obj.no_confusion q (λ x y, x) end
 
     include φ max_rank inj_φ
 
@@ -176,7 +186,7 @@ section reedy
       cases x with [x', x'_ne], esimp at *,
       cases (@fincat.has_decidable_eq _ _ t z) with [t_eq_z, t_ne_z], cases t_eq_z, exfalso,
       apply @no_incoming_non_id_arrows _ z x' φ max_rank inj_φ, existsi f, apply x'_ne, apply t_ne_z
-    end
+    end    
     
     definition red_coslice_from_C' [reducible] (o : (obj x)//C) : x//C_without_z z :=
     begin
@@ -185,32 +195,70 @@ section reedy
       let t' := subcat_obj.mk t
       (@red_coslice_ne_z _ z (mk x' x'_ne) φ inj_φ max_rank _ _ t f),
       refine red_coslice_obs.mk _ _ _, apply t', apply f, intros p,
-      intros q,      
-      assert q1 : x' = t, begin apply subcat_obj.no_confusion p (λ x y, x) end,
+      intros q,
+      have q1 : x' = t, from subcat_obj_eq p,
       apply non_id q1, cases q1, esimp at *, apply q
     end    
-  
+
+    definition red_coslice_from_C'_hom {a b : x//C} (f : a ⟶ b) :
+    (@red_coslice_from_C' _ _ _ _ inj_φ max_rank _ _ a) ⟶ (@red_coslice_from_C' _ _ _ _ inj_φ max_rank _ _ b) := 
+    begin
+      cases f with [f, comm_tr], cases a with [a,g,non_id], cases b with [b,g', non_id'],
+      unfold red_coslice_obs.to_coslice_obs at *, unfold red_coslice_from_C' at *, esimp at *,
+      cases x, esimp at *,
+      apply ⟨f,comm_tr⟩,
+    end
+
     definition red_coslice_without_z_equiv : (obj x)//C ≃ₛ (x//C_without_z z) :=
     equiv.mk (@red_coslice_from_C' C _ _ _ inj_φ max_rank _ _) red_coslice_to_C'
     begin
-      intros y, cases y  with [y,f,non_id],
-      cases x with [x, x_ne], esimp      
+      intros y, cases y with [y,f,non_id],
+      cases x with [x, x_ne], esimp  
     end 
-    sorry
+    begin
+      intros y, cases y with [y,f,non_id], unfold red_coslice_to_C', 
+      cases y, esimp, unfold red_coslice_from_C', cases x, esimp
+    end
 
     definition red_coslice_eq_1 [reducible] [unfold_full] :
       ∀ y, object X (obj (red_coslice_obs.to ((@red_coslice_from_C' C _ _ _ inj_φ max_rank _ _) y))) = X (red_coslice_obs.to y) := 
       begin
         intro, cases y with [y,f,y_ne], cases x with [x, x_ne], esimp        
       end
-
+    
+    -- definition MO_functors_tr_commutes1 : ∀ y, ((Functor_from_C' z X) ∘f !forget) 
+    --        (@to_fun _ _ @red_coslice_without_z_equiv C z x φ inj_φ max_rank _ _ y) = (X ∘f !forget) y :=
+    --   begin intro, unfold functor.compose, unfold forget, unfold Functor_from_C',
+    --     unfold red_coslice_obs.to_coslice_obs, esimp, refine red_coslice_eq_1 _ _, assumption
+    --   end
+    set_option pp.binder_types true
+    -- definition MO_functors_tr_commutes_hom {a b : (obj x)//C} :
+    -- ∀ f : hom a b, -- morphism (X ∘f forget C z) f
+    -- morphism ((Functor_from_C' z X) ∘f forget _ x) (red_coslice_from_C'_hom f) = _  := sorry
+    
     definition MO'_to_MO_map : 
     matching_object (Functor_from_C' z X) x → matching_object X (obj x) :=
     begin
       intros a, refine natural_transformation.mk _ _,
-      intros y uu, unfold functor.compose at *, unfold forget at *, esimp at *, unfold red_coslice_obs.to_coslice_obs,
-      rewrite -(@red_coslice_eq_1 _ _ _ _ inj_φ max_rank _ _ X y), refine (natural_map a) _ poly_unit.star,
-      intros, esimp, unfold functor.compose at *, unfold forget at *, esimp at *, apply sorry
+      { intros y uu, unfold functor.compose at *, unfold forget at *, esimp at *, unfold red_coslice_obs.to_coslice_obs,
+        rewrite -(@red_coslice_eq_1 _ _ _ _ inj_φ max_rank _ _ X y), refine (natural_map a) _ poly_unit.star },
+      { cases a with [η, NatSq], intros x' y,        
+        intros f',
+        let X' := Functor_from_C' z X,
+        let C' := C_without_z z,
+        assert HH : #function
+        morphism (X' ∘f forget C' x) (red_coslice_from_C'_hom f') ∘ η (red_coslice_from_C' x') = 
+        η (@red_coslice_from_C' _ _ _ _ inj_φ max_rank _ _ y),
+        begin apply NatSq _ end,
+        cases x with [x,f,non_id_f], cases y with [y,g,non_id_g], esimp at *,
+        --unfold red_coslice_obs.to_coslice_obs at *,
+        cases f' with [a,p1], esimp,
+        cases x' with [o, o_ne], esimp,
+        unfold Functor_from_C' at *, unfold functor.compose at *, unfold forget at *, esimp at *,
+        unfold red_coslice_from_C'_hom at *, esimp at *,
+        rewrite natural_map_proj,
+        apply funext, intros uu, esimp, esimp, cases uu, refine happly HH _        
+         }
     end
 
     definition MO_equiv : matching_object (Functor_from_C' z X) x ≃ₛ matching_object X (obj x) :=
