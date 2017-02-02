@@ -79,7 +79,6 @@ section reedy
   open sum
   
   definition has_lt_ℕop [instance] : has_lt ℕop := nat_has_lt
-  definition has_le_ℕop [instance] : has_le ℕop := nat_has_le
   definition strict_order_ℕop [instance] : strict_order ℕop := 
     strict_order.mk nat.lt (@lt.irrefl ℕ _) (λ a b c, @nat.lt_trans a b c)
   definition weak_order_ℕop [instance] : weak_order ℕop := 
@@ -131,8 +130,6 @@ section reedy
   definition Functor_from_C'_eq (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) :
     X (@obj _ _ x') = (object (Functor_from_C' z X) x') := 
     begin esimp end
-
-  --set_option pp.implicit true
   
     open poly_unit
     open reduced_coslice
@@ -164,10 +161,7 @@ section reedy
       refine red_coslice_obs.mk (obj t) f _, intros p, intros q,
       assert H : @eq (C_without_z z) x t, begin cases x, cases t, esimp at *, congruence, assumption end,      
       apply non_id H, cases H, esimp, apply q
-    end
-    -- check @red_coslice_obs.cases_on
-    -- definition red_coslice_to_C'_β {t : C_without_z z} {f : x ⟶ t} {non_id : ∀ p, ¬p ▹ f = id} :
-    --   (red_coslice_to_C' (red_coslice_obs.mk t _ non_id)) = (red_coslice_obs.mk t _ _) := sorry
+    end    
 
     definition red_coslice_to_C'_hom (a b : x//C_without_z z) (f : a ⟶ b) : (red_coslice_to_C' a) ⟶ (red_coslice_to_C' b) := 
     begin 
@@ -260,7 +254,7 @@ section reedy
         apply funext, intros uu, esimp, esimp, cases uu, refine happly HH _
          }
     end
-    --set_option pp.implicit true
+
     definition MO_equiv : matching_object (Functor_from_C' z X) x ≃ₛ matching_object X (obj x) :=
     begin
       let C' := C_without_z z,
@@ -279,26 +273,23 @@ section reedy
       refine equiv.mk (@MO'_to_MO_map _ _ _ _ inj_φ max_rank _ _ X) _ _ _,      
       { intros a, cases a with [η, NatSq], refine natural_transformation.mk _ _,
         intros y uu, 
-        assert H1 :  poly_unit → (X∘f forget C (obj x)) (@equiv.inv _ _ ψ y), 
-        begin apply η end, intro, unfold functor.compose at *, unfold forget at *, unfold Functor_from_C' at *,
-        unfold red_coslice_obs.to_coslice_obs, cases y with [y,f,y_ne], esimp, apply H1 star,        
+        have η' :  poly_unit → (X∘f forget C (obj x)) (@equiv.inv _ _ ψ y), from η _,
+        intro, unfold functor.compose at *, unfold forget at *, unfold Functor_from_C' at *,
+        unfold red_coslice_obs.to_coslice_obs, cases y with [y,f,y_ne], esimp, apply η' star,
         intros a b f,
         assert HH : morphism (X∘f forget C (obj x)) (red_coslice_to_C'_hom _ _ f) ∘ η (red_coslice_to_C' a) 
         = η (red_coslice_to_C' b), 
         begin refine NatSq _ end,
         unfold Functor_from_C' at *, unfold functor.compose at *, unfold forget at *, esimp at *,
         unfold red_coslice_to_C'_hom at *, esimp at *,
-        cases f with [f,comm_tr], cases a with [a, ff, non_id_ff ], cases b with [b, gg, non_id_gg], esimp at *, unfold one_funct at *,
+        cases f with [f,comm_tr], cases a with [a, ff, non_id_ff ], cases b with [b, gg, non_id_gg], unfold one_funct at *,
         apply funext, intros uu, cases uu,
         refine happly HH _},
-      { intros a, refine nat_trans_eq, cases a with [η, NatSq], 
-        esimp, rewrite natural_map_proj,
+      { intros a, refine nat_trans_eq, cases a with [η, NatSq], rewrite natural_map_proj,
         unfold MO'_to_MO_map, unfold fn, unfold equiv.inv, rewrite natural_map_proj,
-        esimp,
         apply funext, intro y, apply funext, intro uu, cases uu,
-        assert Heq : (@to_fun _ _ ψ (@inv_fun (obj x//C) _ ψ y)) = y, begin apply right_inv end, cases Heq,
-        cases y with [y,f,non_id_f], esimp at *, cases x with [x,p], esimp,
-        },
+        have Heq : (@to_fun _ _ ψ (@inv_fun (obj x//C) _ ψ y)) = y, from by apply right_inv,
+        cases Heq, cases y with [y,f,non_id_f], esimp at *, cases x with [x,p], esimp },
       { intros a, refine nat_trans_eq, cases a with [η, NatSq],
         esimp, rewrite natural_map_proj,
         unfold MO'_to_MO_map, rewrite natural_map_proj,
@@ -319,7 +310,7 @@ section reedy
         unfold is_reedy_fibrant at *,
         unfold is_fibration_alt at *,
         intros x b,
-        have invC' : invcat C, from invC,        
+        have invC' : invcat C, from invC,
         let Hequiv := (@MO_equiv C z x φ inj_φ (max_rank x) _ _ X),
         let MO := @to_fun _ _ Hequiv b,
         assert isfibX' : is_fibrant (fibreₛ (matching_obj_map X (obj x)) (@to_fun _ _ Hequiv b)), begin apply (rfibX x MO) end,
@@ -356,14 +347,10 @@ section reedy
   -- map from limit of X restricted to C'
   definition map_L_to_Mz (z : C) (X : C ⇒ Type_category) [invC : invcat C]
     (L : cone_with_tip (Functor_from_C' z X) poly_unit) : matching_object X z :=
-      -- match L with
-      -- | natural_transformation.mk η NatSq :=
-      -- refine allows to infer implicit argument for application of NatSq
       by cases L with [η, NatSq]; refine natural_transformation.mk
         (λ a u, η (mk (to a) (reduced_coslice_ne z a)) poly_unit.star)
         (λ a b f, begin apply funext, intro, cases x, refine happly (NatSq _) poly_unit.star end)
-        --funext (λ u, happly (NatSq f.1) poly_unit.star))
-  --end
+
 
   -- explicit representation of the limit of X restricted to category C without z
   definition lim_restricted [reducible] (X : C ⇒ Type_category) (z : C) [invC : invcat C]
@@ -386,14 +373,10 @@ section reedy
 
   definition singleton_contr_fiberₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E :=
   begin
-  refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
-  unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22],
-  esimp, induction p22 using eq.drec, congruence
+    refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
+    unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22],
+    esimp, induction p22 using eq.drec, congruence
   end
-
-  set_option formatter.hide_full_terms false
-  -- set_option pp.binder_types true
-  -- set_option pp.notation true
 
   definition lemma1 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
     {y : C_without_z z} {f : z ⟶ obj y}
