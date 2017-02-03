@@ -495,14 +495,14 @@ section reedy
     { unfold right_inverse, unfold left_inverse, intro x, cases x, reflexivity }
     end
 
-  definition fibrant_limit [invC : invcat C] [finC : is_finite C] 
-    (X : C ⇒ Type_category.{max 1 u}) (rfib : is_reedy_fibrant X) :
-    is_fibrant (limit_obj (limit_in_pretype.{max 1 u} X)) :=
+  definition fibrant_limit.{v} [invC : invcat C] [finC : is_finite C]
+    (X : C ⇒ Type_category) (rfib : is_reedy_fibrant X) :
+    is_fibrant (limit_obj (limit_in_pretype X)) :=
     begin
       cases finC with [n, ψ],
       revert ψ, revert rfib, revert invC, revert X, revert C,
       induction n with [n', IHn],
-      { intros C X invC rfib ψ, apply equiv_is_fibrant.{max 1 u} (@fincat_0_limit_unit_equiv _ ψ X)⁻¹ },
+      { intros C X invC rfib ψ, apply equiv_is_fibrant.{v} (@fincat_0_limit_unit_equiv _ ψ X)⁻¹ },
       { intros C X invC rfib ψ, esimp,        
         have inv_C : invcat C, from invC,        
         cases invC, cases id_reflect_ℕop with [φ, idrefl],

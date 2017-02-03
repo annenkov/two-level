@@ -1,7 +1,7 @@
-import algebra.category facts
+import data.equiv algebra.category facts
 
 open natural_transformation sigma.ops
-open category function
+open category function equiv
 
 
 -- Given categories J and C, we have a canonical functor [const_funct] from the category C to the functor category C^J.
@@ -93,7 +93,7 @@ definition limit_obj [reducible] [unfold_full] {J C : Category} {D : J ⇒ C} : 
   | limit_obj (has_terminal_obj.mk c _) := c.1
 
 notation `Nat` `(` F `,` G `)` := F ⟹ G
-definition one_funct [reducible] {C : Category.{1 1}} := const_funct_obj C Type_category poly_unit
+definition one_funct [reducible] {C : Category.{1}} := const_funct_obj C Type_category poly_unit
 notation `𝟙` := one_funct
 
 -- binary product as a limit
@@ -121,8 +121,7 @@ definition c2_functor (C : Category) (A B : C) : CatTwo ⇒ C :=
     respect_id := bool.rec rfl rfl,
     respect_comp := λi j k f g, by cases f: cases g: cases k: esimp: rewrite id_left ⦄
 
-
-definition product {C : Category} (A B : C) := limit (c2_functor _ A B)
+definition product {C : Category} (A B : C) (L : limit (c2_functor _ A B)) := limit_obj L
 
 -- Type_category limits
 
@@ -135,7 +134,7 @@ open functor poly_unit
 
 universe variable u
 
-definition cone_in_pretype [reducible] {J : Category.{1 1}} (D : J ⇒ Type_category.{max 1 u}) : cone D :=
+definition cone_in_pretype [reducible] {J : Category.{1}} (D : J ⇒ Type_category.{max 1 u}) : cone D :=
 ⟨ cone_with_tip _ poly_unit, -- (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
     (λ a L, natural_map L a star)
@@ -155,7 +154,7 @@ definition nat_trans_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G}
 definition natural_map_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G} (p : N = M) : natural_map N = natural_map M
   := begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map, injection p, assumption  end
 
-definition limit_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : limit D :=
+definition limit_in_pretype {J : Category.{1}} (D : J ⇒ Type_category) : limit D :=
   ⦃ has_terminal_obj _,
     terminal := cone_in_pretype D,
     is_terminal_obj :=
@@ -183,3 +182,24 @@ definition limit_in_pretype {J : Category.{1 1}} (D : J ⇒ Type_category) : lim
           end
       ⦄
   ⦄
+
+
+-- construction of the product in Pretype (aka Type_category) using the
+-- limit of the diagramm 𝟚 ⇒ Type_category
+definition product_in_pretype (A B : Type) := product A B (@limit_in_pretype CatTwo (c2_functor Type_category A B))
+
+open prod.ops
+
+-- showing that constructed product is isomophic to the product type
+definition lim_prod_iso {A B : Type_category} : (product_in_pretype A B) ≃ (A × B) := 
+begin 
+  refine equiv.mk _ _ _ _, 
+  { intro, cases a with [η, comm_tr], esimp, refine (η ff poly_unit.star, η tt poly_unit.star) },
+  { intro p, refine natural_transformation.mk _ _, 
+    { intro a uu, cases a, apply p.1, apply p.2 },
+    { intros, cases f, cases b, esimp, apply funext, intro x, reflexivity }},
+  { intros, refine nat_trans_eq, cases x with [η, comm_tr],
+      rewrite natural_map_proj, rewrite natural_map_proj,
+      apply funext, intros b, apply funext, intro uu, cases uu, cases b: esimp },
+  { intros, esimp, cases x, esimp }
+end
