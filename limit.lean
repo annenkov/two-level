@@ -93,7 +93,7 @@ definition limit_obj [reducible] [unfold_full] {J C : Category} {D : J ⇒ C} : 
   | limit_obj (has_terminal_obj.mk c _) := c.1
 
 notation `Nat` `(` F `,` G `)` := F ⟹ G
-definition one_funct [reducible] {C : Category.{1}} := const_funct_obj C Type_category poly_unit
+definition one_funct [reducible] [unfold_full] {C : Category.{1}} := const_funct_obj C Type_category poly_unit
 notation `𝟙` := one_funct
 
 -- binary product as a limit
