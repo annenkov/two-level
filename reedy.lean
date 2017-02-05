@@ -62,9 +62,9 @@ section reedy
   open eq.ops function
   definition C_without_z_invcat [instance] (z : C) [invC : invcat C] : invcat (C_without_z z) :=
     begin
-      unfold C_without_z, cases invC, cases id_reflect_ℕop,
-      refine invcat.mk (has_idreflect.mk _ _), apply Functor_from_C' z φ, intros,
-      cases id_reflect a with [p1, p2],
+      unfold C_without_z, cases invC, cases reflecting_id_ℕop,
+      refine invcat.mk (has_idreflect.mk _ _), apply Functor_from_C' z φ, intros x y f p,
+      cases reflecting_id f p with [p1, p2],
       refine ⟨_,_⟩,
       { cases x, cases y, congruence, apply p1 },
       { cases x, cases y, esimp at *, induction p1 using eq.drec, esimp at *, apply p2}
@@ -85,10 +85,10 @@ section reedy
     weak_order.mk nat.le (@le.refl ℕ _) (λ a b c, @nat.le_trans a b c) (λ a b, nat.le_antisymm)
 
 
-  definition max_fun_to_ℕ (φ : C → ℕ) {inj_φ : injective φ} {n : ℕ} [ψ : objects C ≃ₛ fin (nat.succ n)] :
+  definition max_fun_to_ℕ (φ : C → ℕ) {n : ℕ} [ψ : objects C ≃ₛ fin (nat.succ n)] :
   Σ z, (Π c, φ c ≤ φ z) :=
   begin
-    generalize inj_φ, clear inj_φ, generalize φ, clear φ, generalize ψ, clear ψ, generalize C, clear C,
+    generalize φ, clear φ, generalize ψ, clear ψ, generalize C, clear C,
     induction n with [n', IHn],
     intros,    
     { cases ψ with [f,g,l,r], esimp at *,
@@ -100,10 +100,10 @@ section reedy
       have H : Σ z, @to_fun _ (fin (succ (nat.succ n'))) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,
       cases H with [z'', max_z],
       have ψ' : C_without_z z'' ≃ fin (succ n'), from (@C_without_z_is_finite _ _ z'' _),
-      have H : Π (φ : C_without_z z'' → ℕ) (inj_φ : injective φ),
+      have H : Π (φ : C_without_z z'' → ℕ), 
                Σ (z : C_without_z z''), (Π c, φ c ≤ φ z),
       from IHn _ ψ',
-      cases H (φ ∘ obj) (injective_comp inj_φ injective_obj) with [z', Hmax],
+      cases H (φ ∘ obj) with [z', Hmax],
       cases (@decidable_le (φ z'') (φ z')) with [z_le, z_ne_le],
       existsi z', intros,
       cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z'') with [c_eq_z, c_ne_z],
@@ -119,12 +119,13 @@ section reedy
   
   open invcat
 
-  definition no_incoming_non_id_arrows (z : C) {y : C} {φ : C ⇒ ℕop} {max_rank : φ y ≤ φ z} [inj_φ : injective φ]
-    : ¬ ∃ (f : y ⟶ z), y ≠ z :=
-    begin intro H, cases H with [f, p],
-    have H : φ y ≥ φ z, from φ f,    
-    have y_eq_z : y = z, from inj_φ (le.antisymm max_rank H),
-    apply p, assumption
+definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ y, φ y ≤ φ z} 
+    {reflecting_id : id_reflect φ}
+    : ¬ ∃ y : C, ∃ (f : y ⟶ z), y ≠ z :=
+    begin intro H, cases H with [y, s], cases s with [f, y_ne_z], unfold id_reflect at *,
+    have H : φ y ≥ φ z, from φ f,
+    cases reflecting_id f ⟨le.antisymm (max_rank y) H, rfl⟩ with [p, Heq],
+    apply y_ne_z, assumption
     end
 
   definition Functor_from_C'_eq (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) :
@@ -139,19 +140,19 @@ section reedy
     -- we show it using the definition of reduced coslice and the fact that C is an inverse category
     definition reduced_coslice_ne (z : C) (a : z//C) [invC : invcat C] : to a ≠ z :=
     begin
-      cases a with [y, c_hom_to, f_not_id], esimp at *,
+      cases a with [y, f, non_id_f], esimp at *,
       intro p, cases p,
-      apply f_not_id rfl,
-      cases invC, cases id_reflect_ℕop,
-      apply (id_reflect rfl).2
+      apply non_id_f rfl,
+      cases invC, cases reflecting_id_ℕop,
+      apply (reflecting_id f ⟨rfl,rfl⟩).2
     end
   
   section MO_facts
     open reduced_coslice reduced_coslice.coslice_obs
     
     variables {z : C} {x : C_without_z z}
-              {φ : C ⇒ ℕop} {inj_φ : injective φ}
-              {max_rank : φ x ≤ φ z}
+              {φ : C ⇒ ℕop} {reflecting_id : id_reflect φ}
+              {max_rank : ∀ x, φ x ≤ φ z}
               [is_finite C] [invcat C]
               (X : C ⇒ Type_category)
 
@@ -176,13 +177,13 @@ section reedy
       (q : subcat_obj.mk c p = subcat_obj.mk c1 p1) : c = c1 :=
       begin refine subcat_obj.no_confusion q (λ x y, x) end
 
-    include φ max_rank inj_φ
+    include φ max_rank reflecting_id
 
     definition red_coslice_ne_z (t : C) (f : x ⟶ t) : t ≠ z :=
     begin
       cases x with [x', x'_ne], esimp at *,
       cases (@fincat.has_decidable_eq _ _ t z) with [t_eq_z, t_ne_z], cases t_eq_z, exfalso,
-      apply @no_incoming_non_id_arrows _ z x' φ max_rank inj_φ, existsi f, apply x'_ne, apply t_ne_z
+      apply @no_incoming_non_id_arrows _ z φ max_rank reflecting_id, existsi x', existsi f, apply x'_ne, apply t_ne_z
     end    
     
     definition red_coslice_from_C' [reducible] (o : (obj x)//C) : x//C_without_z z :=
@@ -190,7 +191,7 @@ section reedy
       cases o with [t,f,non_id], esimp at *, 
       cases x with [x', x'_ne], esimp at *,      
       let t' := subcat_obj.mk t
-      (@red_coslice_ne_z _ z (mk x' x'_ne) φ inj_φ max_rank _ _ t f),
+      (@red_coslice_ne_z _ z (mk x' x'_ne) φ reflecting_id max_rank _ _ t f),
       refine red_coslice_obs.mk _ _ _, apply t', apply f, intros p,
       intros q,
       have q1 : x' = t, from subcat_obj_eq p,
@@ -198,7 +199,7 @@ section reedy
     end    
 
     definition red_coslice_from_C'_hom {a b : x//C} (f : a ⟶ b) :
-    (@red_coslice_from_C' _ _ _ _ inj_φ max_rank _ _ a) ⟶ (@red_coslice_from_C' _ _ _ _ inj_φ max_rank _ _ b) := 
+    (@red_coslice_from_C' _ _ _ _ reflecting_id max_rank _ _ a) ⟶ (@red_coslice_from_C' _ _ _ _ reflecting_id max_rank _ _ b) := 
     begin
       cases f with [f, comm_tr], cases a with [a,g,non_id], cases b with [b,g', non_id'],
       unfold red_coslice_obs.to_coslice_obs at *, unfold red_coslice_from_C' at *, esimp at *,
@@ -207,7 +208,7 @@ section reedy
     end
 
     definition red_coslice_without_z_equiv : (obj x)//C ≃ₛ (x//C_without_z z) :=
-    equiv.mk (@red_coslice_from_C' C _ _ _ inj_φ max_rank _ _) red_coslice_to_C'
+    equiv.mk (@red_coslice_from_C' C _ _ _ reflecting_id max_rank _ _) red_coslice_to_C'
     begin
       intros y, cases y with [y,f,non_id],
       cases x with [x, x_ne], esimp  
@@ -218,7 +219,7 @@ section reedy
     end
 
     definition red_coslice_eq_1 :
-    ∀ y, object X (obj (red_coslice_obs.to ((@red_coslice_without_z_equiv  _ _ _ _ inj_φ max_rank _ _) ∙ y))) = 
+    ∀ y, object X (obj (red_coslice_obs.to ((@red_coslice_without_z_equiv  _ _ x _ reflecting_id max_rank _ _) ∙ y))) = 
       X (red_coslice_obs.to y) := 
       begin
         intro, unfold fn, cases y with [y,f,y_ne], cases x with [x, x_ne], esimp
@@ -227,7 +228,7 @@ section reedy
     definition MO'_to_MO_map : 
     matching_object (Functor_from_C' z X) x → matching_object X (obj x) :=
     begin
-      let  ψ := @red_coslice_without_z_equiv C z _ φ inj_φ max_rank _ _,
+      let  ψ := @red_coslice_without_z_equiv C z _ φ reflecting_id max_rank _ _,
       intros a,  --cases a with [η, NatSq], 
       refine natural_transformation.mk _ _,
       { intros y uu, unfold functor.compose at *, unfold forget at *, esimp at *, unfold red_coslice_obs.to_coslice_obs, 
@@ -243,7 +244,7 @@ section reedy
         let C' := C_without_z z,
         assert HH : #function
         morphism (X' ∘f forget C' x) (red_coslice_from_C'_hom f') ∘ η (red_coslice_from_C' x') = 
-        η (@red_coslice_from_C' _ _ _ _ inj_φ max_rank _ _ y),
+        η (@red_coslice_from_C' _ _ _ _ reflecting_id max_rank _ _ y),
         begin apply NatSq _ end,
         cases x with [x,f,non_id_f], cases y with [y,g,non_id_g], esimp at *,        
         cases f' with [a,p1], esimp,
@@ -259,7 +260,7 @@ section reedy
     begin
       let C' := C_without_z z,
       let X' := Functor_from_C' z X,
-      let  ψ := @red_coslice_without_z_equiv C z _ φ inj_φ max_rank _ _,
+      let  ψ := @red_coslice_without_z_equiv C z x φ reflecting_id max_rank _ _,
       
       -- we got two commuting triangles using equivalence  ((obj x)//C) ≃ (x//C')
       assert Htr1 : ∀ y, (X' ∘f !forget) (@to_fun _ _ ψ y) = (X ∘f !forget) y,
@@ -270,7 +271,7 @@ section reedy
         begin intro, unfold functor.compose, unfold forget, unfold Functor_from_C',
       unfold red_coslice_obs.to_coslice_obs, cases y with [y,f,y_ne], esimp end,
       unfold matching_object,
-      refine equiv.mk (@MO'_to_MO_map _ _ _ _ inj_φ max_rank _ _ X) _ _ _,      
+      refine equiv.mk (@MO'_to_MO_map _ _ _ _ reflecting_id max_rank _ _ X) _ _ _,      
       { intros a, cases a with [η, NatSq], refine natural_transformation.mk _ _,
         intros y uu, 
         have η' :  poly_unit → (X∘f forget C (obj x)) (@equiv.inv _ _ ψ y), from η _,
@@ -301,7 +302,7 @@ section reedy
   
   
   definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invC : invcat C]
-    {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} [inj_φ : injective φ]
+    {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} {reflecting_id : id_reflect φ}
     [rfibX : is_reedy_fibrant X] [finC : is_finite C]
     : is_reedy_fibrant (Functor_from_C' z X)  :=
       begin
@@ -310,8 +311,7 @@ section reedy
         unfold is_reedy_fibrant at *,
         unfold is_fibration_alt at *,
         intros x b,
-        have invC' : invcat C, from invC,
-        let Hequiv := (@MO_equiv C z x φ inj_φ (max_rank x) _ _ X),
+        let Hequiv := (@MO_equiv C z x φ reflecting_id max_rank _ _ X),
         let MO := @to_fun _ _ Hequiv b,
         assert isfibX' : is_fibrant (fibreₛ (matching_obj_map X (obj x)) (@to_fun _ _ Hequiv b)), begin apply (rfibX x MO) end,
         assert Hfeq': (fibreₛ (matching_obj_map X (obj x)) MO) ≃ₛ (fibreₛ (matching_obj_map (Functor_from_C' z X) x) b),
@@ -334,8 +334,8 @@ section reedy
                  begin 
                    unfold fn, refine nat_trans_eq, apply funext, intro y, apply funext, intro uu, 
                   cases uu, esimp at *,
-                  assert H : morphism X (hom_to y) a =  
-                  natural_map ((@MO'_to_MO_map _ _ _ _ inj_φ (max_rank x) _ _ X) 
+                  assert H : morphism X (hom_to y) a =
+                  natural_map ((@MO'_to_MO_map _ _ _ _ reflecting_id max_rank _ _ X) 
                   (matching_obj_map (Functor_from_C' z X) x a)) y star, unfold MO'_to_MO_map, 
                   rewrite natural_map_proj, cases y, esimp, cases x, esimp,
                   apply H end
@@ -435,7 +435,7 @@ section reedy
     (ψ : C ≃ₛ fin (succ n'))
     {z : C}
     {φ : C ⇒ ℕop}
-    (inj_φ : injective φ)
+    (reflecting_id : id_reflect φ)
     (max_rank : Πy, φ y ≤ φ z)
     (X : C ⇒ Type_category.{u}) :
     (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
@@ -460,7 +460,7 @@ section reedy
                   cases deq_y with [y'_eq_z, y'_ne_z],
                   { cases y_eq_z, cases y'_eq_z, esimp, rewrite (endomorphism_is_id f), refine happly (respect_id _ _) _},
                   { cases y_eq_z, esimp, apply l_z},
-                  { cases y'_eq_z, esimp, exfalso, apply (@no_incoming_non_id_arrows _ z y φ (max_rank y) _), existsi f, assumption },
+                  { cases y'_eq_z, esimp, exfalso, apply (@no_incoming_non_id_arrows _ z φ max_rank _), existsi y, existsi f, assumption },
                   { esimp, apply l_y },
                 },
 
@@ -473,7 +473,7 @@ section reedy
                   cases (@has_decidable_eq C ⟨succ n', ψ⟩ z z) with [y_eq_z, y_ne_z], esimp, congruence,
                   apply sigma_eq_congr,
                   refine ⟨_,lim_two_pieces_eq⟩,
-                  { intros, apply inj_φ, assumption },
+                  { intros, apply reflecting_id, assumption },
                   { apply funext, intro y',
                     cases @fincat.has_decidable_eq C (⟨_,ψ⟩) y' z with [y'_eq_z, y'_ne_z], esimp,
                     cases y' with [y'', p'], esimp at *, exfalso, apply p', apply y'_eq_z,
@@ -505,10 +505,9 @@ section reedy
       { intros C X invC rfib ψ, apply equiv_is_fibrant.{v} (@fincat_0_limit_unit_equiv _ ψ X)⁻¹ },
       { intros C X invC rfib ψ, esimp,        
         have inv_C : invcat C, from invC,        
-        cases invC, cases id_reflect_ℕop with [φ, idrefl],
-        assert inj_φ : injective (object φ), begin unfold injective, intros x y H, cases idrefl H, assumption end,
+        cases invC, cases reflecting_id_ℕop with [φ, idrefl],
         -- choosing an element of C with maximal rank
-        have H : Σ z, (Π (y : C), φ y ≤ φ z), from @max_fun_to_ℕ _ φ inj_φ _ ψ,
+        have H : Σ z, (Π (y : C), φ y ≤ φ z), from @max_fun_to_ℕ _ φ _ ψ,
         cases H with [z, z_max_φ],
         -- removing z from C and showing that the resulting category
         -- is still inverse and finite
@@ -529,7 +528,7 @@ section reedy
                 (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
              ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
                  (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
-                 (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ inj_φ z_max_φ
+                 (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ idrefl z_max_φ
                  -- get a pullback of the span (L --p--> matching_object M Z <<--q-- X z)
                  -- where L is limit of X restricted to C_without_z (so, L is Nat(𝟙,Functor_from_C' z X))
          ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : begin rewrite p_eq, rewrite q_eq, apply two_piece_limit_pullback_p_q_equiv end
@@ -539,7 +538,7 @@ section reedy
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
         -- that L is fibrant (from IH)
-        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from @Functor_from_C'_reedy_fibrant _ z X _ φ z_max_φ inj_φ rfib ⟨_,ψ⟩,
+        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from @Functor_from_C'_reedy_fibrant _ z X _ φ z_max_φ idrefl rfib ⟨_,ψ⟩,
         assert isFibL: is_fibrant (lim_restricted X z),
           begin
           refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'
