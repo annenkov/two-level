@@ -113,9 +113,11 @@ namespace fib_eq
                      subst (refl x) d = d :=
     elim_β d
 
+  notation p ▹ d := subst p d
+
   definition trans_β' {x : X} : trans' (refl x) (refl x) = (refl x) :=
   begin
-    unfold trans' , repeat rewrite elim_β
+    unfold trans', repeat rewrite elim_β
   end
 
 
@@ -132,7 +134,7 @@ namespace fib_eq
 
   -- actions on paths
 
-  definition ap {x y : X}  (f : X -> Y) : x ~ y -> f x ~ f y :=
+  definition ap {x y : X} (f : X -> Y) : x ~ y -> f x ~ f y :=
     elim (refl _) _
 
   definition ap_β {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
@@ -143,7 +145,9 @@ namespace fib_eq
   definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) :=
   begin unfold ap₂, repeat rewrite ap_β, apply trans_β end
 
-  -- definition apd {x y : X} (p : x = y)
+  definition apd {P : X → Fib} (f : Π x, P x) 
+                 {x y : X} (p : x ~ y) : p ▹ f x ~ f y := 
+  begin induction p using elim, unfold subst, rewrite elim_β end
 
   definition strict_eq_fib_eq { x y : X} : x = y -> x ~ y :=
   eq.rec (refl _)
