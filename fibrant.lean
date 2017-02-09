@@ -1,4 +1,4 @@
-import data.equiv
+import data.equiv facts
 
 open eq
 
@@ -97,7 +97,7 @@ namespace fib_eq
   definition trans [trans] {x y z : X} : x ~ y → y ~ z → x ~ z := λ p,
     elim p z
 
-  definition trans_β {x y : X}(p : x ~ y) : trans p (refl y) = p :=
+  definition trans_β [simp] {x y : X}(p : x ~ y) : trans p (refl y) = p :=
     elim_β p
 
   definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z :=
@@ -111,7 +111,7 @@ namespace fib_eq
   definition subst [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
                            (p : x ~ y)(d : P x) : P y :=
     elim d y p
-  definition subst_β {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
+  definition subst_β [simp] {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
                      subst (refl x) d = d :=
     elim_β d
 
@@ -127,7 +127,7 @@ namespace fib_eq
   postfix ⁻¹ := symm
 
   definition symm_trans {x y : X}(p : x ~ y) : symm p ⬝ p ~ refl y :=
-  begin induction p using elim, rewrite symm_β, rewrite trans_β end
+  begin induction p using elim, simp end
 
 --    let t := calc
 --         (symm (refl x) ⬝ refl x)
@@ -141,32 +141,31 @@ namespace fib_eq
     definition ap {x y : X} (f : X -> Y) : x ~ y -> f x ~ f y :=
       elim (refl _) _
 
-    definition ap_β {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
+    definition ap_β [simp] {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
 
     definition ap_trans {x y z : X} (f : X → Y) (p : x ~ y) (q : y ~ z) : 
-      ap f (p ⬝ q) ~ (ap f p) ⬝ (ap f q) := 
-    begin induction p using elim, induction q using elim, rewrite ap_β, repeat rewrite trans_β, rewrite ap_β end
+      ap f (p ⬝ q) ~ (ap f p) ⬝ (ap f q) := by induction p using elim; induction q using elim; simp
 
     definition ap_symm {x y : X} (f : X → Y) (p : x ~ y) : ap f p⁻¹ ~ (ap f p)⁻¹ := 
-      begin induction p using elim, rewrite ap_β, repeat rewrite symm_β, rewrite ap_β end
+      by induction p using elim; simp
 
     definition ap_compose {x y : X} (f : X → Y) (g : Y → Z) (p : x ~ y) : ap g (ap f p) ~ ap (g ∘ f) p :=
-      begin induction p using elim, repeat rewrite ap_β end
+      by induction p using elim; simp
 
-    definition ap_id {x y : X} (p : x ~ y) : ap id p ~ p := by induction p using elim; rewrite ap_β
+    definition ap_id {x y : X} (p : x ~ y) : ap id p ~ p := by induction p using elim; simp
 
-    definition ap₂ {x x' : X} {y y' : Y} (f : X -> Y -> Z) (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' :=
-      (ap (λ x, f x y) p) ⬝ (ap (f x') q)
+    definition ap₂ [reducible] {x x' : X} {y y' : Y} (f : X -> Y -> Z) 
+      (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' := (ap (λ x, f x y) p) ⬝ (ap (f x') q)
 
     definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) :=
-    begin unfold ap₂, repeat rewrite ap_β, apply trans_β end
+      by simp
 
-    definition apd {P : X → Fib} (f : Π x, P x) 
-                   {x y : X} (p : x ~ y) : p ▹ f x ~ f y := 
-    begin induction p using elim, unfold subst, rewrite elim_β end
+    definition apd {P : X → Fib} (f : Π x, P x) {x y : X} (p : x ~ y) : p ▹ f x ~ f y := 
+      by induction p using elim; rewrite subst_β
 
-    definition apd_β {P : X → Fib} (f : Π x, P x) 
-               {x y : X} : apd f (refl x) = #eq.ops (subst_β _)⁻¹ ▹ (refl (f x)) := elim_β _
+    definition apd_β {P : X → Fib} (f : Π x, P x) {x y : X} : 
+      apd f (refl x) = #eq.ops eq.symm (subst_β _) ▹ refl (f x) := elim_β _
+  
   end ap
 
   definition strict_eq_fib_eq { x y : X} : x = y -> x ~ y :=
