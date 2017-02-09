@@ -109,12 +109,12 @@ section reedy
       cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z'') with [c_eq_z, c_ne_z],
       { rewrite c_eq_z, assumption },
       { apply Hmax (mk _ c_ne_z) },
-      existsi z'', intro, apply nat.le_of_eq_or_lt,
-      cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z'') with [c_eq_z, c_ne_z],
-      left, rewrite c_eq_z,
-      right, have Hmax_c' : φ (obj (mk c c_ne_z)) ≤ φ (obj z'), from Hmax (mk c c_ne_z), esimp at *,
-      have Hlt : φ z' < φ z'', from iff.elim_right (gt_iff_not_le _ _) z_ne_le,
-      apply lt_of_le_of_lt Hmax_c' Hlt }
+        existsi z'', intro, apply nat.le_of_eq_or_lt,
+        cases (@fincat.has_decidable_eq _ ⟨succ (succ n'), ψ⟩ c z'') with [c_eq_z, c_ne_z],
+        left, rewrite c_eq_z, right, 
+        have Hmax_c' : φ (obj (mk c c_ne_z)) ≤ φ (obj z'), from Hmax (mk c c_ne_z), esimp at *,
+        have Hlt : φ z' < φ z'', from iff.elim_right (gt_iff_not_le _ _) z_ne_le,
+        apply lt_of_le_of_lt Hmax_c' Hlt }
   end
   
   open invcat
@@ -229,15 +229,14 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     matching_object (Functor_from_C' z X) x → matching_object X (obj x) :=
     begin
       let  ψ := @red_coslice_without_z_equiv C z _ φ reflecting_id max_rank _ _,
-      intros a,  --cases a with [η, NatSq], 
+      intros a,
       refine natural_transformation.mk _ _,
       { intros y uu, unfold functor.compose at *, unfold forget at *, esimp at *, unfold red_coslice_obs.to_coslice_obs, 
-         unfold Functor_from_C' at *, 
-      have HH : object X (red_coslice_obs.to (ψ ∙ y)), from (natural_map a) (ψ ∙ y) star,
-      intro, unfold fn at *,
-      cases y with [y,f,y_ne], cases x with [x', x_ne], esimp at *, 
-      apply HH,
-      },
+        unfold Functor_from_C' at *, 
+        have HH : object X (red_coslice_obs.to (ψ ∙ y)), from (natural_map a) (ψ ∙ y) star,
+        intro, unfold fn at *,
+        cases y with [y,f,y_ne], cases x with [x', x_ne], esimp at *, 
+        apply HH },
       { cases a with [η, NatSq], intros x' y,        
         intros f',
         let X' := Functor_from_C' z X,
@@ -376,22 +375,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
     unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22],
     esimp, induction p22 using eq.drec, congruence
-  end
-
-  definition lemma1 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
-    {y : C_without_z z} {f : z ⟶ obj y}
-    {c : Π y : C_without_z z, X (obj y) }
-    (Heq' : ∀ (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'), morphism (Functor_from_C' z X) f (c y) = c y') :
-      natural_map (map_L_to_Mz_alt z X ⟨c,Heq'⟩) (lift_to_rc y f) star = c y :=
-      begin unfold map_L_to_Mz_alt, unfold natural_map, cases y, esimp
-      end
-
-  -- TODO: rename
-  definition lemma2 [invC : invcat C] {X : C ⇒ Type_category} {z : C}
-    {c_z : X z}
-    {y : C_without_z z} {f : z ⟶ obj y} :
-    (natural_map (matching_obj_map X z c_z)) (lift_to_rc y f) star = X f c_z :=
-      begin unfold natural_map end
+  end  
 
   definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Type_category.{u}) (z : C) :
   (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
@@ -414,8 +398,11 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
       { intros,
         assert H: natural_map (!map_L_to_Mz_alt ⟨c, Heq'⟩) (lift_to_rc y f) star  =
                   natural_map (!matching_obj_map c_z) (lift_to_rc y f) star, begin rewrite Heq end,
+        assert lemma1 : natural_map (map_L_to_Mz_alt z X ⟨c,Heq'⟩) (lift_to_rc y f) star = c y,
+          begin unfold map_L_to_Mz_alt, unfold natural_map, cases y, esimp end,
+        have lemma2 : (natural_map (matching_obj_map X z c_z)) (lift_to_rc y f) star = X f c_z, from rfl,
         symmetry,
-        apply #eq.ops (lemma1 Heq')⁻¹ ⬝ H ⬝ lemma2 },
+        apply #eq.ops lemma1⁻¹ ⬝ H ⬝ lemma2 },
       { apply Heq'}},
     { intro w, cases w with [c, H], cases H with [p1,p2], apply sigma_eq_congr, existsi rfl, apply apd },
     { intro w, cases w with [c, H], apply sigma_eq_congr, refine ⟨_,_⟩, cases c with [p1,p2],
