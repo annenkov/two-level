@@ -18,7 +18,7 @@ namespace eq
     (f : X → Y)(p : x = x')(u : P (f x)) : ap f p ▹ u = p ▹ u :=
     eq.drec (eq.refl _) p
 
-  definition transfer_concat {A : Type } {a b c: A} (P : A → Type)
+  definition transport_concat {A : Type } {a b c: A} (P : A → Type)
     (p : a = b) (q : b = c) (u : P a) : q ▹ (p ▹ u) = p ⬝ q ▹ u := begin cases p, cases q, reflexivity end
 
   definition concat_inv {A : Type } {a b : A} {P : A → Type}
@@ -77,7 +77,7 @@ namespace equiv
         (l x₁ ▹ ((r (f x₁))⁻¹ ▹ x₂))
             = (l x₁ ▹ (eq.symm (ap f (l x₁)) ▹ x₂)) : rfl
         ... = (l x₁ ▹ (eq.symm (l x₁) ▹ x₂)) : naturality_subst
-        ... = ((l x₁ ⬝ (eq.symm (l x₁))) ▹ x₂) : transfer_concat
+        ... = ((l x₁ ⬝ (eq.symm (l x₁))) ▹ x₂) : transport_concat
         ... = x₂ : concat_inv (l x₁)
         end)
    begin
@@ -87,7 +87,7 @@ namespace equiv
      calc
       #eq.ops 
       r x₁ ▹ (r x₁)⁻¹ ▹ x₂
-         = r x₁ ⬝ (r x₁)⁻¹ ▹ x₂ : transfer_concat
+         = r x₁ ⬝ (r x₁)⁻¹ ▹ x₂ : transport_concat
      ... = x₂ : concat_inv (r x₁)
    end
 
