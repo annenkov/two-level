@@ -149,6 +149,9 @@ namespace fib_eq
                  {x y : X} (p : x ~ y) : p ▹ f x ~ f y := 
   begin induction p using elim, unfold subst, rewrite elim_β end
 
+  definition apd_β {P : X → Fib} (f : Π x, P x) 
+             {x y : X} : apd f (refl x) = #eq.ops (subst_β _)⁻¹ ▹ (refl (f x)) := elim_β _
+
   definition strict_eq_fib_eq { x y : X} : x = y -> x ~ y :=
   eq.rec (refl _)
 
