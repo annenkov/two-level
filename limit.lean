@@ -3,6 +3,7 @@ import data.equiv algebra.category facts
 open natural_transformation sigma.ops
 open category function equiv
 
+notation X `≃ₛ` Y := equiv X Y
 
 -- Given categories J and C, we have a canonical functor [const_funct] from the category C to the functor category C^J.
 -- Here, we do not define this functor in full, but we define the object and morphism part.
@@ -93,6 +94,65 @@ definition limit_obj [reducible] [unfold_full] {J C : Category} {D : J ⇒ C} : 
   | limit_obj (has_terminal_obj.mk c _) := c.1
 
 notation `Nat` `(` F `,` G `)` := F ⟹ G
+
+open eq.ops
+
+open functor natural_transformation
+
+definition nat_transf_sigma_iso {C D : Category} {F G : C ⇒ D} :
+  F ⟹ G ≃ₛ Σ (η : Π(a : C), hom (F a) (G a)), (Π{a b : C} (f : hom a b), G f ∘ η a = η b ∘ F f) :=
+  equiv.mk (λ N, match N with
+              |mk η NatSq := ⟨η, NatSq⟩
+           end)
+           (λ S, match S with
+           | ⟨η, NatSq⟩ := mk η NatSq
+           end)
+  begin unfold function.left_inverse, intro x, cases x, esimp end
+  begin unfold function.right_inverse, unfold function.left_inverse, intro x, cases x, esimp end
+
+
+open eq
+set_option pp.all true
+
+open equiv poly_unit
+
+definition poly_unit_arrow_equiv [instance] [simp] (A : Type) : (poly_unit → A) ≃ A :=
+  mk (λ f, f star) (λ a, (λ u, a))
+     (λ f, funext (λ x, by cases x; reflexivity))
+     (λ u, rfl)
+
+definition to_unit [reducible] [unfold_full] {C : Category} {X : C ⇒ Type_category }
+(f : Π a, poly_unit → X a) y := f y star
+
+definition pi_unit_arrow_equiv {C : Category} {X : C ⇒ Type_category } :
+  (Π a, object (const_funct_obj C Type_category poly_unit) a⟶ X a) ≃ Π y, X y :=
+begin
+  esimp, refine equiv.mk to_unit (λ f y x, f y) _ (λx, rfl),
+  unfold function.left_inverse, intros, apply funext, intros, apply funext, intros, cases x_2, reflexivity
+end
+
+definition nat_unit_sigma_equiv [instance] {C : Category.{1 1}} {X : C ⇒ Type_category} :
+  (const_funct_obj C Type_category poly_unit ⟹ X) ≃ₛ
+  Σ (c : Π y, X y), Π (y y' : C) (f : y ⟶ y'), (X f) (c y) = c y' :=
+begin
+  apply equiv.trans (nat_transf_sigma_iso),
+  apply @sigma_congr,
+
+  intros ff,
+  apply @pi_congr₂, intro, apply @pi_congr₂, intro b, apply @pi_congr₂, intro f',
+  esimp at *, rewrite id_right,
+  refine equiv.mk _ _ _ _,
+  apply pi_unit_arrow_equiv,
+  { intro p, apply happly p },
+
+  { intro p, esimp at *,
+    apply funext, intro x, cases x, apply p },
+
+  { unfold function.left_inverse, intro, esimp },
+
+  { unfold function.right_inverse, unfold function.left_inverse, intro p, esimp },
+end
+
 definition one_funct [reducible] [unfold_full] {C : Category.{1}} := const_funct_obj C Type_category poly_unit
 notation `𝟙` := one_funct
 
@@ -138,8 +198,7 @@ definition cone_in_pretype [reducible] {J : Category.{1}} (D : J ⇒ Type_catego
 ⟨ cone_with_tip _ poly_unit, -- (const_funct_obj _ _ unit) ⟹ D ,
   natural_transformation.mk
     (λ a L, natural_map L a star)
-    (λ a b f, funext (λ L, happly (naturality L f) _))
-⟩
+    (λ a b f, funext (λ L, happly (naturality L f) _)) ⟩
 
 open function
 
