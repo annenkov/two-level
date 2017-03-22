@@ -38,17 +38,17 @@ namespace invcat
   structure has_idreflect [class] (C D : Category) :=
     (φ : C ⇒ D)
     (reflecting_id : id_reflect φ)
-  
+
   section id_reflect_ℕop_iff
 
   -- showing that id_reflect_ℕop φ ↔ id_reflect φ
   -- NOTE: (Danil) I couldn't find instance of iff for Type
 
   definition map_id_reflect_ℕop {C : Category} (φ : C ⇒ ℕop):
-    id_reflect_ℕop φ → id_reflect φ := 
-    begin 
-      intros id_r_ℕop x y f s, cases s with [q, Heq], cases id_r_ℕop f q with [p₁, p₂], 
-      existsi p₁, cases p₁, esimp at *, apply p₂ 
+    id_reflect_ℕop φ → id_reflect φ :=
+    begin
+      intros id_r_ℕop x y f s, cases s with [q, Heq], cases id_r_ℕop f q with [p₁, p₂],
+      existsi p₁, cases p₁, esimp at *, apply p₂
     end
 
   definition map_ℕop_id_reflect {C : Category} (φ : C ⇒ ℕop):
@@ -56,7 +56,7 @@ namespace invcat
     begin intros id_r x y f q,
     -- here we use the fact that any morphism x ⟶ x in ℕop only can be an identity morphism
     have f_is_id : q ▹ morphism φ f = id, from rfl,
-    cases id_r f ⟨q,f_is_id⟩ with [p₁, p₂], existsi p₁, cases p₁, esimp at *, apply p₂ 
+    cases id_r f ⟨q,f_is_id⟩ with [p₁, p₂], existsi p₁, cases p₁, esimp at *, apply p₂
     end
 
   end id_reflect_ℕop_iff
@@ -68,7 +68,7 @@ namespace invcat
 
   definition endomorphism_is_id {C : Category} [invC : invcat C] {c : C} (f : c ⟶ c) : f = id :=
   begin cases invC with H, cases H with [φ, id_r], apply (id_r f ⟨rfl,rfl⟩).2 end
-  
+
   lemma idreflect_inj_hom {C : Category} {x y : C} [idr : has_idreflect C ℕop] (f : x ⟶ y) :
     (has_idreflect.φ C ℕop) x = (has_idreflect.φ C ℕop) y → x = y :=
     begin cases idr with [φ, idr_φ], esimp, intro  H, cases (idr_φ f ⟨H,rfl⟩), assumption end

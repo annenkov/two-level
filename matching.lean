@@ -76,7 +76,7 @@ namespace matching_object
     --limit_obj (limit_in_pretype (X ∘f (forget C z)))
     Nat(𝟙, (X ∘f (forget C z)))
 
-  definition matching_obj_map {C : Category.{1 1}} [invC : invcat C] (X : C ⇒ Type_category) (z : C) : 
+  definition matching_obj_map {C : Category.{1 1}} [invC : invcat C] (X : C ⇒ Type_category) (z : C) :
     X z → matching_object X z :=
     begin
       intros x, unfold matching_object, unfold forget, unfold functor.compose,
@@ -87,9 +87,9 @@ namespace matching_object
         apply eq.symm, apply happly (respect_comp X f_hom (hom_to a)) x }
     end
   open natural_transformation
-  
+
   definition nat_map_matching_obj_map {C : Category.{1 1}} [invC : invcat C] (X : C ⇒ Type_category) (z : C) (x : X z) :
-  natural_map (matching_obj_map X z x) = (λ a u, X (hom_to a) x) := 
+  natural_map (matching_obj_map X z x) = (λ a u, X (hom_to a) x) :=
   begin
     reflexivity
   end

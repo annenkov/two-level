@@ -83,9 +83,9 @@ namespace equiv
    begin
      intro x, cases x with [x₁, x₂],
      cases φ with [f, g, l, r], unfold function.right_inverse at *, unfold function.left_inverse at *,  esimp at *,
-     apply sigma_eq_congr, refine ⟨_,_⟩, apply r,     
+     apply sigma_eq_congr, refine ⟨_,_⟩, apply r,
      calc
-      #eq.ops 
+      #eq.ops
       r x₁ ▹ (r x₁)⁻¹ ▹ x₂
          = r x₁ ⬝ (r x₁)⁻¹ ▹ x₂ : transport_concat
      ... = x₂ : concat_inv (r x₁)

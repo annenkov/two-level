@@ -250,11 +250,11 @@ definition product_in_pretype (A B : Type) := product A B (@limit_in_pretype Cat
 open prod.ops
 
 -- showing that constructed product is isomophic to the product type
-definition lim_prod_iso {A B : Type_category} : (product_in_pretype A B) ≃ (A × B) := 
-begin 
-  refine equiv.mk _ _ _ _, 
+definition lim_prod_iso {A B : Type_category} : (product_in_pretype A B) ≃ (A × B) :=
+begin
+  refine equiv.mk _ _ _ _,
   { intro, cases a with [η, comm_tr], esimp, refine (η ff poly_unit.star, η tt poly_unit.star) },
-  { intro p, refine natural_transformation.mk _ _, 
+  { intro p, refine natural_transformation.mk _ _,
     { intro a uu, cases a, apply p.1, apply p.2 },
     { intros, cases f, cases b, esimp, apply funext, intro x, reflexivity }},
   { intros, refine nat_trans_eq, cases x with [η, comm_tr],
