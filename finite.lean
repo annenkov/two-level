@@ -145,10 +145,10 @@ namespace fincat
   variables {C C' : Category.{u v}}
   open category sigma.ops eq equiv.ops
 
-  definition is_finite [class] (C : Category) := Σ n, C ≃ fin n
-  definition is_finite_eq [finC : is_finite C] := finC.2
+  definition is_obj_finite [class] (C : Category) := Σ n, C ≃ fin n
+  definition is_obj_finite_eq [finC : is_obj_finite C] := finC.2
 
-  attribute is_finite_eq [instance]
+  attribute is_obj_finite_eq [instance]
 
   definition fincat_ne_maxi {n : ℕ} {z : C} {f : C → fin (succ n)} (inj_f : injective f)
     (max_z : f z = maxi) {o : C} (p : o ≠ z) : f o ≠ (maxi : fin (succ n)) :=
@@ -157,21 +157,21 @@ namespace fincat
       apply p, rewrite -max_z at a, apply inj_f a
   end
 
-  definition eq_of_finN_eq [finC : is_finite C] {c c' : C} : c = c' → to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' :=
+  definition eq_of_finN_eq [finC : is_obj_finite C] {c c' : C} : c = c' → to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' :=
     begin
       intro Heq, cases finC with [n, φ], esimp, apply (ap _ Heq)
     end
 
-  definition finN_eq_of_eq [finC : is_finite C] {c c' : C} : to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' → c = c' :=
+  definition finN_eq_of_eq [finC : is_obj_finite C] {c c' : C} : to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' → c = c' :=
     begin
       intro Heq, cases finC with [n, φ], cases φ with [f,g,l,r], esimp at *,
       apply (injective_of_left_inverse l), apply Heq
     end
 
-  definition eq_iff_finN_eq [finC : is_finite C] {c c' : C} :
+  definition eq_iff_finN_eq [finC : is_obj_finite C] {c c' : C} :
     to_fun (fin (finC.1)) c = to_fun (fin (finC.1)) c' ↔ c = c' := iff.intro finN_eq_of_eq eq_of_finN_eq
 
-  definition has_decidable_eq [instance] [finC : is_finite C] {c c' : C} : decidable (c = c') :=
+  definition has_decidable_eq [instance] [finC : is_obj_finite C] {c c' : C} : decidable (c = c') :=
     decidable_of_decidable_of_iff (fin.has_decidable_eq _ _ _) eq_iff_finN_eq
 
   definition fincat_ob_remove_fin_equiv {n : ℕ} (z : C) [φ : C ≃ fin (succ n)] : (Σ c, c ≠ z) ≃ fin n :=

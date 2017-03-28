@@ -65,7 +65,7 @@ namespace fiblimits
   definition C_without_z_sigma_equiv {C : Category} (z : C) : C_without_z z ≃ₛ Σ (c : C), c ≠ z :=
   equiv.mk (λ c', ⟨obj c', prop c'⟩) (λc, mk c.1 c.2) begin intros, cases x, esimp, end begin intros, cases x, esimp end
 
-  definition C_without_z_is_finite [instance] {n : ℕ} (z : C) [φ : objects C ≃ₛ fin (nat.succ n)]
+  definition C_without_z_is_obj_finite [instance] {n : ℕ} (z : C) [φ : objects C ≃ₛ fin (nat.succ n)]
   : objects (C_without_z z) ≃ₛ fin n :=  (fincat_ob_remove_fin_equiv z) ∘ (C_without_z_sigma_equiv z)
 
   open sum
@@ -91,7 +91,7 @@ namespace fiblimits
     { intros,
       have H : Σ z, @to_fun _ (fin (succ (nat.succ n'))) ψ z = maxi, from ⟨(inv_fun C maxi), !right_inv⟩,
       cases H with [z'', max_z],
-      have ψ' : C_without_z z'' ≃ fin (succ n'), from (@C_without_z_is_finite _ _ z'' _),
+      have ψ' : C_without_z z'' ≃ fin (succ n'), from (@C_without_z_is_obj_finite _ _ z'' _),
       have H : Π (φ : C_without_z z'' → ℕ),
                Σ (z : C_without_z z''), (Π c, φ c ≤ φ z),
       from IHn _ ψ',
@@ -148,7 +148,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     variables {z : C} {x : C_without_z z}
               {φ : C ⇒ ℕop} {reflecting_id : id_reflect φ}
               {max_rank : ∀ x, φ x ≤ φ z}
-              [is_finite C] [invcat C]
+              [is_obj_finite C] [invcat C]
               (X : C ⇒ Type_category)
 
     definition red_coslice_to_C' (o : x//C_without_z z) : (obj x)//C :=
@@ -296,7 +296,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
 
   definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invC : invcat C]
     {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} {reflecting_id : id_reflect φ}
-    [rfibX : is_reedy_fibrant X] [finC : is_finite C]
+    [rfibX : is_reedy_fibrant X] [finC : is_obj_finite C]
     : is_reedy_fibrant (Functor_from_C' z X)  :=
       begin
         let C' := C_without_z z,
@@ -476,7 +476,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     { unfold right_inverse, unfold left_inverse, intro x, cases x, reflexivity }
     end
 
-  definition fibrant_limit.{v} [invC : invcat C] [finC : is_finite C]
+  definition fibrant_limit.{v} [invC : invcat C] [finC : is_obj_finite C]
     (X : C ⇒ Type_category) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype X)) :=
     begin
@@ -493,7 +493,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
         -- removing z from C and showing that the resulting category
         -- is still inverse and finite
         have invC' : invcat (C_without_z z), from C_without_z_invcat z,
-        have finC' : C_without_z z ≃ₛ fin n', from @C_without_z_is_finite _ _ _ _,
+        have finC' : C_without_z z ≃ₛ fin n', from @C_without_z_is_obj_finite _ _ _ _,
 
 
         -- using equivalences
