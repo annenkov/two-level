@@ -39,7 +39,7 @@ definition pi_sum_fin_unit_equiv' {n} (Heq : fin n + unit ≃ₛ fin (nat.succ n
      unfold right_inverse, unfold left_inverse, apply prod.eta
    end
 
-definition lemma3 {n : ℕ} {X : fin n → Fib}
+definition finite_cofibrant {n : ℕ} {X : fin n → Fib}
   : is_fibrant (Π i, X i) :=
   begin
     induction n with n IHn,
