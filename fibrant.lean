@@ -300,26 +300,3 @@ definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
 
 definition is_fibration_alt [reducible] {E B : Type} (p : E → B) :=
   Π (b : B), is_fibrant (fibreₛ p b)
-
-
-
--- I am just doing some experiments here. Should probably be improved. (Nicolai)
--- does ↔ exist for Type?
-definition two_fibrations {E B : Type} {p : E → B} :
-  (is_fibration p → is_fibration_alt p) × (is_fibration_alt p → is_fibration p) :=
-  begin
-    intros,
-    split,
-
-    intro ifp,
-    intros,
-    cases ifp with [F , fe],
-    apply equiv_is_fibrant,
-    exact (fe b),
-
-    intro ifaltp,
-    have F : B → Fib, from λ b, Fib.mk (fibreₛ p b) (ifaltp b),
-    existsi (λ b, Fib.mk (fibreₛ p b) (ifaltp b)),
-    intro b,
-    apply (equiv.refl),
-  end

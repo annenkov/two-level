@@ -42,7 +42,7 @@ namespace fiblimits
   -- we also refer to this category as C'
   definition C_without_z (z : C) : Category := Mk (subcat C (λ c, c ≠ z))
 
-  -- (Danil) I have to use apply tactic, as it allows to infer correct implicits
+  -- use apply tactic, as it allows to infer correct implicits
   definition Functor_from_C' [reducible] (z : C) (X : C ⇒ D) : C_without_z z ⇒ D :=
   ⦃ functor,
     object := λ ob, X (obj ob),

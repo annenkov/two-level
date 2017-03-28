@@ -138,7 +138,7 @@ namespace fin
     : (Σ i : fin (nat.succ n), i ≠ z) ≃ fin n := fin_remove_max ∘ (fin_remove_max_equiv z)
 end fin
 
--- some facts about (essentially) finite categories
+-- some facts about finite categories
 
 namespace fincat
   universe variables u v
