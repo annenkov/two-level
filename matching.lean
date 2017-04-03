@@ -35,6 +35,7 @@ namespace reduced_coslice
       id_left := (λ a b f,       sigma.eq !id_left  !proof_irrel),
       id_right := (λ a b f,      sigma.eq !id_right !proof_irrel) ⦄
 
+  -- ref:def:reduced-coslice
   definition ReducedCoslice (C : Category) (c : C) := Mk (reduced_coslice C c)
 
   notation c `//` C := ReducedCoslice C c
@@ -68,6 +69,7 @@ open invcat --Fib
 
 open functor
 
+-- ref:def:matching-object
 namespace matching_object
 
   open poly_unit reduced_coslice.red_coslice_obs reduced_coslice.coslice_obs

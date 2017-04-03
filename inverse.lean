@@ -19,6 +19,7 @@ definition ℕop := Mk nat_cat_op
 
 lemma hom_ℕop_id {C : Category} {x : ℕop} {f : x ⟶ x} : f = id := rfl
 
+-- ref:def:inverse-category
 namespace invcat
   open sigma.ops iff
   definition id_reflect {C D: Category} (φ : C ⇒ D) :=

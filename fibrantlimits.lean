@@ -28,6 +28,7 @@ namespace reedy
   universe variable u
   variables {C : Category.{1 1}} [invcat C]
 
+  -- ref:def:reedy-fibration
   definition is_reedy_fibrant [class] (X : C ⇒ Type_category) :=
     Π z, is_fibration_alt (matching_obj_map X z)
 end reedy
@@ -476,6 +477,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     { unfold right_inverse, unfold left_inverse, intro x, cases x, reflexivity }
     end
 
+  -- ref:thm:fibrant-limits
   definition fibrant_limit.{v} [invC : invcat C] [finC : is_obj_finite C]
     (X : C ⇒ Type_category) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype X)) :=
