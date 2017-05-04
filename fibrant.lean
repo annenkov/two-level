@@ -36,7 +36,6 @@ namespace fib_eq
   constant elim {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
                 [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
                 (d : P x (refl x)) : Π (y : X)(p : x ~ y), P y p
-
   constant elim_β {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
                 [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
                 (d : P x (refl x)) : elim d x (refl x) = d
@@ -44,6 +43,7 @@ namespace fib_eq
   definition idp [reducible] [constructor] {X : Type}[is_fibrant X] {a : X} := refl a
 
   attribute elim_β [simp]
+  attribute elim [recursor]
 end fib_eq
 
 constant fib_eq_is_fibrant' {X : Type}[is_fibrant X](x y : X) : is_fibrant' (fib_eq x y)

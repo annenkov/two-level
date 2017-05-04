@@ -18,7 +18,7 @@ namespace eq
     (f : X → Y)(p : x = x')(u : P (f x)) : ap f p ▹ u = p ▹ u :=
     eq.drec (eq.refl _) p
 
-  definition transport_concat {A : Type } {a b c: A} (P : A → Type)
+  definition transport_concat [simp] {A : Type } {a b c: A} (P : A → Type)
     (p : a = b) (q : b = c) (u : P a) : q ▹ (p ▹ u) = p ⬝ q ▹ u := begin cases p, cases q, reflexivity end
 
   definition concat_inv {A : Type } {a b : A} {P : A → Type}

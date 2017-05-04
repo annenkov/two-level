@@ -6,9 +6,11 @@ open fib_eq
 /- Ported from the Lean HoTT library, trying to keep as close as possible
    to the original implementation.
    Changes while porting: change equality notation (from "=" to "~"),
-   use "fib_eq.elim" for induction, replace usages of "reflexivity" with "simp" tactic.
+   replace usages of "reflexivity" with "simp" tactic.
    The "simp" tactic allows to apply computation rules for fibrant equality, which doesn't
    hold judgementally.
+   The "induction" tactic applies fib_eq.elim induction principle automatically, as it is
+   marked with [recursor] attribute.
 -/
 
 namespace hprod
@@ -69,13 +71,13 @@ namespace hprod
     ((prod_eq p q)..1, (prod_eq p q)..2) ~ (p, q) :=
   by
     induction u; induction v; esimp at *;
-    induction p using elim; induction q using elim;
+    induction p; induction q;
     rewrite prod_eq_β'; repeat rewrite elim_β
 
   /- Transport -/
 
   definition prod_transport (p : a ~ a') (u : P a × Q a) :
     p ▹ u ~ (p ▹ u.1, p ▹ u.2) :=
-  by induction p using elim; induction u; simp
+  by induction p; induction u; simp
 
 end hprod
