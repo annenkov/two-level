@@ -1,4 +1,4 @@
-import data.equiv
+import data.equiv facts
 
 open eq
 
@@ -113,14 +113,14 @@ namespace fib_eq
   definition trans'' {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
   by induction p using elim; exact q
 
-  definition subst [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
+  definition transport [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
                            (p : x ~ y)(d : P x) : P y :=
     elim d y p
-  definition subst_β [simp] {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
-                     subst (refl x) d = d :=
+  definition transport_β [simp] {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
+                     transport (refl x) d = d :=
     elim_β d
 
-  notation p ▹ d := subst p d
+  notation p ▹ d := transport p d
 
   infixl ⬝ := trans
   postfix ⁻¹ := symm
@@ -134,12 +134,26 @@ namespace fib_eq
     (p ⬝ (q ⬝ r)) ~ ((p ⬝ q) ⬝ r) :=
   by induction r using elim; simp
 
-  definition subst_trans {A : Fib } {a b c: A} {P : A → Fib}
+  definition transport_trans {A : Fib } {a b c: A} {P : A → Fib}
     (p : a ~ b) (q : b ~ c) (u : P a) : #fib_eq q ▹ (p ▹ u) ~ p ⬝ q ▹ u :=
     by induction p using elim; induction q using elim; simp
 
+   definition eq_transport_l {a₁ a₂ a₃ : X} (p : a₁ ~ a₂) (q : a₁ ~ a₃) :
+   p ▹ q ~ p⁻¹ ⬝ q :=
+   by induction p using elim; induction q using elim; simp
+
+   definition eq_transport_r {a₁ a₂ a₃ : X} (p : a₂ ~ a₃) (q : a₁ ~ a₂) :
+   p ▹ q ~ q ⬝ p :=
+   by induction p using elim; induction q using elim; simp
+
+   definition to_fib_eq { x y : X } : x = y -> x ~ y := eq.rec (refl _)
+
   namespace ap
     -- action on paths
+
+    -- notation for the transport along the strict equality
+    notation p `▹s` x := eq.rec_on p x
+
 
     definition ap {x y : X} (f : X -> Y) : x ~ y -> f x ~ f y :=
       elim (refl _) _
@@ -164,23 +178,16 @@ namespace fib_eq
       by simp
 
     definition apd {P : X → Fib} (f : Π x, P x) {x y : X} (p : x ~ y) : p ▹ f x ~ f y :=
-      by induction p using elim; rewrite subst_β
+      by induction p using elim; rewrite transport_β
 
     definition apd_β {P : X → Fib} (f : Π x, P x) {x y : X} :
-      apd f (refl x) = #eq.ops eq.symm (subst_β _) ▹ refl (f x) := elim_β _
+      apd f (refl x) = (eq.symm (transport_β _) ▹s refl (f x)) := elim_β _
+
+    definition apd_β' {P : X → Fib} (f : Π x, P x) {x y : X} :
+    ((transport_β (f x)) ▹s (apd f (refl x))) = refl (f x) :=
+    by unfold apd; rewrite elim_β; rewrite eq.transport_concat
 
   end ap
-
-  definition eq_transport_l {a₁ a₂ a₃ : X} (p : a₁ ~ a₂) (q : a₁ ~ a₃) :
-    p ▹ q ~ p⁻¹ ⬝ q :=
-  by induction p using elim; induction q using elim; simp
-
-  definition eq_transport_r {a₁ a₂ a₃ : X} (p : a₂ ~ a₃) (q : a₁ ~ a₂) :
-    p ▹ q ~ q ⬝ p :=
-  by induction p using elim; induction q using elim; simp
-
-  definition strict_eq_fib_eq { x y : X} : x = y -> x ~ y :=
-  eq.rec (refl _)
 
 end fib_eq
 
