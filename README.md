@@ -7,7 +7,7 @@ Requires Lean 2 (version 0.2.0) to compile.
 | File | |
 |--------------------|:--------------------------------------------------------------------:
 | fibrant.lean       | implementation of the two-level type theory
-| fibrantlimits.lean | proof of Theorem 10 (every Reedy fibrant diagram has a fibrant limit)
+| fibrantlimits.lean | proof of Theorem 15 (every Reedy fibrant diagram has a fibrant limit)
 | finite.lean        | facts about finite sets and categories
 | inverse.lean       | definition of inverse categories
 | limit.lean         | definition of limits and construction of limits in category of pretypes.
