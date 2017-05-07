@@ -1,8 +1,10 @@
 import data.fin algebra.monotone algebra.category
-open function nat
+open function nat fin
 
 definition fin_strict_order [instance] (n : ℕ) : strict_order (fin n)
-  := sorry
+  := strict_order.mk (λ i i', val i < val i')
+                     (λ i, lt.irrefl (val i))
+                     (λ a b c, lt.trans)
 
 structure delta_plus (n m : ℕ) :=
   (f : fin (succ n) -> fin (succ m))
@@ -20,7 +22,7 @@ definition comp_delta_plus (n m p : ℕ)
 
 definition eq_delta_plus {n m : ℕ}
   {f g : delta_plus n m} (q : Π (i : fin (succ n)), f i = g i) : @eq (delta_plus n m) f g :=
-  sorry
+  begin cases f, cases g, esimp at *, congruence, apply funext, apply q end
 
 definition delta_plus_cat : category ℕ :=
   ⦃ category,
