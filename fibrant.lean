@@ -303,6 +303,7 @@ definition fibre_projection {X : Type}{Y : X → Type}(x : X)
      end
 
 -- ref:def:fibration
+-- Definition 3.2
 definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
   Σ (F : B → Fib.{u}), Π (b : B), F b ≃ₛ fibreₛ p b
 

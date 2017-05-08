@@ -40,6 +40,7 @@ definition pi_sum_fin_unit_equiv' {n} (Heq : fin n + unit ≃ₛ fin (nat.succ n
    end
 
 -- ref:lem:finite-cofibrant
+-- Lemma 3.1
 definition finite_cofibrant {n : ℕ} {X : fin n → Fib}
   : is_fibrant (Π i, X i) :=
   begin
