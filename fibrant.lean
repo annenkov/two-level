@@ -1,4 +1,4 @@
-import data.equiv facts
+import data.equiv .facts
 
 open eq
 
