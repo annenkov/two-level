@@ -21,6 +21,7 @@ namespace hprod
 
   variables {A : Fib}
   variables {B : Fib}
+  variables {C : Fib}
   variables {u v w : A × B} {a a' : A} {b b' : B}
             {P Q : A → Fib}
 
@@ -29,7 +30,6 @@ namespace hprod
 
   definition pair_eq {a a' : A} {b b' : B} : (a ~ a') × (b ~ b') -> (a,b) ~ (a',b')
   | pair_eq (p, q) := ap₂ (λ x y, (x,y)) p q
-
 
   definition pair_eq' [reducible]  (pa : a ~ a') (pb : b ~ b') : (a, b) ~ (a', b') :=
     ap₂ (λ x y, (x,y)) pa pb
@@ -79,5 +79,18 @@ namespace hprod
   definition prod_transport (p : a ~ a') (u : P a × Q a) :
     p ▹ u ~ (p ▹ u.1, p ▹ u.2) :=
   by induction p; induction u; simp
+
+  definition prod_transport' (p : a ~ a') (u : P a × Q a) :
+  p ▹ u ~ (p ▹ u.1, p ▹ u.2) :=
+  begin induction p; induction u, esimp, repeat rewrite transport_β end
+
+  -- definition prod_transport'' (p : a ~ a') (u : P a × Q a) :
+  -- p ▹ u ~ (p ▹ u.1, p ▹ u.2) :=
+  -- match p with
+  -- | fib.eq_refl _ :=
+  --   match u with
+  --   | (u1,u2) := begin esimp, rewrite transport_β end
+  --   end
+  -- end
 
 end hprod

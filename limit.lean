@@ -74,7 +74,7 @@ definition cone_category [instance] [reducible] [unfold_full] {J C : Category} (
 
 definition ConeCat [reducible] {J C : Category} (D : J ⇒ C) : Category := category.Mk (cone_category D)
 
-set_option formatter.hide_full_terms false
+--set_option formatter.hide_full_terms false
 
 
 -- CAVEAT: I (Nicolai) have changed this.
@@ -112,7 +112,7 @@ definition nat_transf_sigma_iso {C D : Category} {F G : C ⇒ D} :
 
 
 open eq
-set_option pp.all true
+--set_option pp.all true
 
 open equiv poly_unit
 
@@ -206,10 +206,14 @@ open function
 definition natural_map_proj {C D : Category} (F G: functor C D) (η :Π a, F a ⟶ G a)
   (nat : Π⦃a b : C⦄ (f : a ⟶ b), G f ∘ η a = η b ∘ F f) : natural_map (natural_transformation.mk η nat) = η := rfl
 
-definition nat_trans_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G}
-  {p : natural_map N = natural_map M} : N = M :=
-    begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map at *, cases p, congruence end
 
+definition nat_trans_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G} :
+   natural_map N = natural_map M → N = M :=
+   begin intros p, cases N with [η, NatSq], cases M with [η', NatSq'],
+    unfold natural_map at p, substvars end
+
+
+print nat_trans_eq
 definition natural_map_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G} (p : N = M) : natural_map N = natural_map M
   := begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map, injection p, assumption  end
 
@@ -259,7 +263,7 @@ begin
   { intro p, refine natural_transformation.mk _ _,
     { intro a uu, cases a, apply p.1, apply p.2 },
     { intros, cases f, cases b, esimp, apply funext, intro x, reflexivity }},
-  { intros, refine nat_trans_eq, cases x with [η, comm_tr],
+  { intros, refine nat_trans_eq _, cases x with [η, comm_tr],
       rewrite natural_map_proj, rewrite natural_map_proj,
       apply funext, intros b, apply funext, intro uu, cases uu, cases b: esimp },
   { intros, esimp, cases x, esimp }

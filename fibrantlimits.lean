@@ -281,12 +281,12 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
         cases f with [f,comm_tr], cases a with [a, ff, non_id_ff ], cases b with [b, gg, non_id_gg],
         apply funext, intros uu, cases uu,
         refine happly HH _},
-      { intros a, refine nat_trans_eq, cases a with [η, NatSq], rewrite natural_map_proj,
+      { intros a, refine nat_trans_eq _, cases a with [η, NatSq], rewrite natural_map_proj,
         unfold MO'_to_MO_map, unfold fn, unfold equiv.inv, rewrite natural_map_proj,
         apply funext, intro y, apply funext, intro uu, cases uu,
         have Heq : (@to_fun _ _ ψ (@inv_fun (obj x//C) _ ψ y)) = y, from by apply right_inv,
         cases Heq, cases y with [y,f,non_id_f], esimp at *, cases x with [x,p], esimp },
-      { intros a, refine nat_trans_eq, cases a with [η, NatSq],
+      { intros a, refine nat_trans_eq _, cases a with [η, NatSq],
         esimp, rewrite natural_map_proj,
         unfold MO'_to_MO_map, rewrite natural_map_proj,
         apply funext, intro y, apply funext, intro uu, cases uu,
@@ -317,7 +317,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
             calc
                   matching_obj_map X' x a
                 = @inv_fun _ _ Hequiv (matching_obj_map X (obj x) a) :
-                    begin refine nat_trans_eq, apply funext, intro y, apply funext, intro uu,
+                    begin refine nat_trans_eq _, apply funext, intro y, apply funext, intro uu,
                         cases y, cases uu, esimp end
             ... = @inv_fun _ _ Hequiv (@to_fun _ _ Hequiv b) : ap _ p
             ... = b : @left_inv _ _ _
@@ -327,7 +327,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
                  matching_obj_map X (obj x) a
                  = Hequiv ∙ (matching_obj_map X' x a) :
                  begin
-                   unfold fn, refine nat_trans_eq, apply funext, intro y, apply funext, intro uu,
+                   unfold fn, refine nat_trans_eq _, apply funext, intro y, apply funext, intro uu,
                   cases uu, esimp at *,
                   assert H : morphism X (hom_to y) a =
                   natural_map ((@MO'_to_MO_map _ _ _ _ reflecting_id max_rank _ _ X)
@@ -366,13 +366,6 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
   definition lift_to_rc [reducible] {z : C} (y : C_without_z z) (f : z ⟶ obj y): z//C :=
     red_coslice_obs.mk (obj y) f (λ p a, prop y p⁻¹)
 
-  definition singleton_contr_fiberₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E :=
-  begin
-    refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
-    unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22],
-    esimp, induction p22 using eq.drec, congruence
-  end
-
   definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Type_category.{u}) (z : C) :
   (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
   (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
@@ -384,7 +377,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     refine @sigma_congr₂ _ _ _ _, intro c_z,
     refine equiv.mk _ _ _ _,
     { intro w, refine ⟨_,_⟩, refine ⟨w.1, prod.pr2 w.2⟩,
-      unfold map_L_to_Mz_alt, refine nat_trans_eq, unfold natural_map,
+      unfold map_L_to_Mz_alt, refine nat_trans_eq _, unfold natural_map,
       apply funext, intro y, apply funext, intro u, unfold matching_obj_map,
       esimp, cases w with [c,p2], cases p2 with [p_l, p_r], esimp at *, symmetry,
       apply (p_l (subcat_obj.mk (to y) (reduced_coslice_ne z y)) (hom_to y)) },
@@ -465,8 +458,27 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
               }
            end
 
+  definition singleton_contr_fiberₛ {E B : Type} {p : E → B}
+    : (Σ b, fibreₛ p b) ≃ₛ E :=
+      calc
+      (Σ b x, p x = b) ≃ₛ (Σ x b, p x = b) : _
+                  ...  ≃ₛ (Σ (x : E), poly_unit) : _
+                  ...  ≃ₛ E : _
+
+  -- I have to keep this old version of proof, since Lean could not
+  -- derive constraints for the universe when this lemma used in fibration_domain_is_fibrant
+  -- and eventually in fibrant_limit.
+  definition singleton_contr_fiber_altₛ {E B : Type} {p : E → B} : (Σ b, fibreₛ p b) ≃ₛ E :=
+   begin
+    refine equiv.mk (λ (p' : (Σ b, fibreₛ p b)), p'.2.1) (λ e, ⟨p e, ⟨e,rfl⟩⟩) _ (λx, rfl),
+    unfold function.left_inverse, intros, cases x with [p1, p2], cases p2 with [p21,p22],
+    esimp, induction p22 using eq.drec, congruence
+  end
+
+
+set_option formatter.hide_full_terms false
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
-    is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
+  is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiber_altₛ _
 
   definition fincat_0_limit_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Type_category) : Nat(𝟙,X) ≃ₛ poly_unit :=
     begin
@@ -495,8 +507,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
         have H : Σ z, (Π (y : C), φ y ≤ φ z), from @max_fun_to_ℕ _ φ _ ψ,
         cases H with [z, z_max_φ],
         -- removing z from C and showing that the resulting category
-        -- is still inverse and finite
-        have invC' : invcat (C_without_z z), from C_without_z_invcat z,
+        -- is still finite
         have finC' : C_without_z z ≃ₛ fin n', from @C_without_z_is_obj_finite _ _ _ _,
 
 

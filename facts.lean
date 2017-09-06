@@ -112,7 +112,7 @@ namespace equiv
     [φ : A ≃ B] [φ' : Π a : A, F a ≃ G (φ ∙ a)] :
     (Σ a, F a) ≃ Σ a, G a := equiv.trans sigma_congr₂ sigma_congr₁
 
-  definition sigma_swap {A B : Type} {F : A → B → Type} :
+  definition sigma_swap [instance] {A B : Type} {F : A → B → Type} :
     (Σ (a : A) (b : B), F a b) ≃ Σ (b : B) (a : A), F a b :=
     equiv.mk (λ x, ⟨x.2.1,⟨x.1,x.2.2⟩⟩)
              (λ x, ⟨x.2.1,⟨x.1,x.2.2⟩⟩)
@@ -123,6 +123,25 @@ namespace equiv
   match Hiff with
   | iff.intro f g := equiv.mk f g (λx, proof_irrel _ _) (λx, proof_irrel _ _)
   end
+
+  open poly_unit
+
+  definition singleton_contrₛ [instance] {A} : Π b, (Σ (a : A), b = a) ≃ poly_unit :=
+    begin
+    intro b,
+    refine equiv.mk (λ p, star) (λ u, ⟨b, rfl⟩) _ _,
+    { unfold left_inverse, intros, cases x with [x1, x2],
+      induction x2 using eq.drec, reflexivity},
+    { unfold right_inverse, intros, cases x, reflexivity }
+  end
+
+  definition sigma_trivial_equiv [instance] {A} : (Σ (a : A), poly_unit) ≃ A :=
+  begin
+    refine equiv.mk (λ p, p.1) (λ a, ⟨a, star⟩) _ (λx, rfl),
+    { unfold left_inverse, intros, cases x with [x1, x2], cases x2, reflexivity}
+  end
+
+  definition eq_to_equiv {A B : Type} : A = B -> A ≃ B := λ p, eq.rec !equiv.refl  p
 
 end equiv
 

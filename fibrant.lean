@@ -111,7 +111,7 @@ namespace fib_eq
 
   -- Alternative proof of transitivity using tactics.
   definition trans'' {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
-  by induction p using elim; exact q
+  by induction p; exact q
 
   definition transport [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
                            (p : x ~ y)(d : P x) : P y :=
@@ -126,25 +126,25 @@ namespace fib_eq
   postfix ⁻¹ := symm
 
   definition symm_trans {x y : X} (p : x ~ y) : p⁻¹ ⬝ p ~ refl y :=
-  by induction p using elim; simp
+  by induction p; simp
 
   definition symm_trans_β {x : X} : (refl x)⁻¹ ⬝ (refl x) = refl x := by simp
 
   definition assoc_trans {x y z t: X} (p : x ~ y) (q : y ~ z) (r : z ~ t) :
     (p ⬝ (q ⬝ r)) ~ ((p ⬝ q) ⬝ r) :=
-  by induction r using elim; simp
+  by induction r; simp
 
   definition transport_trans {A : Fib } {a b c: A} {P : A → Fib}
     (p : a ~ b) (q : b ~ c) (u : P a) : #fib_eq q ▹ (p ▹ u) ~ p ⬝ q ▹ u :=
-    by induction p using elim; induction q using elim; simp
+    by induction p; induction q; simp
 
    definition eq_transport_l {a₁ a₂ a₃ : X} (p : a₁ ~ a₂) (q : a₁ ~ a₃) :
    p ▹ q ~ p⁻¹ ⬝ q :=
-   by induction p using elim; induction q using elim; simp
+   by induction p; induction q; simp
 
    definition eq_transport_r {a₁ a₂ a₃ : X} (p : a₂ ~ a₃) (q : a₁ ~ a₂) :
    p ▹ q ~ q ⬝ p :=
-   by induction p using elim; induction q using elim; simp
+   by induction p; induction q; simp
 
    definition to_fib_eq { x y : X } : x = y -> x ~ y := eq.rec (refl _)
 
@@ -161,15 +161,15 @@ namespace fib_eq
     definition ap_β [simp] {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
 
     definition ap_trans {x y z : X} (f : X → Y) (p : x ~ y) (q : y ~ z) :
-      ap f (p ⬝ q) ~ (ap f p) ⬝ (ap f q) := by induction p using elim; induction q using elim; simp
+      ap f (p ⬝ q) ~ (ap f p) ⬝ (ap f q) := by induction p; induction q; simp
 
     definition ap_symm {x y : X} (f : X → Y) (p : x ~ y) : ap f p⁻¹ ~ (ap f p)⁻¹ :=
-      by induction p using elim; simp
+      by induction p; simp
 
     definition ap_compose {x y : X} (f : X → Y) (g : Y → Z) (p : x ~ y) : ap g (ap f p) ~ ap (g ∘ f) p :=
-      by induction p using elim; simp
+      by induction p; simp
 
-    definition ap_id {x y : X} (p : x ~ y) : ap id p ~ p := by induction p using elim; simp
+    definition ap_id {x y : X} (p : x ~ y) : ap id p ~ p := by induction p; simp
 
     definition ap₂ [reducible] {x x' : X} {y y' : Y} (f : X -> Y -> Z)
       (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' := (ap (λ x, f x y) p) ⬝ (ap (f x') q)
@@ -178,7 +178,7 @@ namespace fib_eq
       by simp
 
     definition apd {P : X → Fib} (f : Π x, P x) {x y : X} (p : x ~ y) : p ▹ f x ~ f y :=
-      by induction p using elim; rewrite transport_β
+      by induction p; rewrite transport_β
 
     definition apd_β {P : X → Fib} (f : Π x, P x) {x y : X} :
       apd f (refl x) = (eq.symm (transport_β _) ▹s refl (f x)) := elim_β _
@@ -211,6 +211,7 @@ definition is_contr_equiv [instance] {X : Type}[is_fibrant X] :
     (λ a, ⟨center a,(λx, contraction a x)⟩)
     (λ a, by cases a; reflexivity)
     (λ a, by cases a; reflexivity)
+
 
 definition is_contr_is_fibrant [instance] (X : Type)[is_fibrant X] : is_fibrant (is_contr X) :=
   equiv_is_fibrant is_contr_equiv
@@ -272,7 +273,7 @@ section fib_equivalences
   definition coerce {X Y : Fib} : X ~ Y → X → Y := elim id Y
   definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X ~ Y) : is_fib_equiv (coerce p) :=
     begin
-      induction p using elim,
+      induction p,
       unfold coerce, rewrite elim_β,
       apply id_is_fib_equiv
     end
@@ -302,6 +303,7 @@ definition fibre_projection {X : Type}{Y : X → Type}(x : X)
            {apply (λ x, rfl)}
      end
 
+
 -- ref:def:fibration
 -- Definition 3.2
 definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
@@ -309,3 +311,5 @@ definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
 
 definition is_fibration_alt [reducible] {E B : Type} (p : E → B) :=
   Π (b : B), is_fibrant (fibreₛ p b)
+
+open equiv

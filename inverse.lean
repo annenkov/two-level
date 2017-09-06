@@ -15,7 +15,7 @@ definition nat_cat_op [instance] : category ℕ :=
     id_left := λ a b f, eq.refl _,
     id_right := λ a b f, eq.refl _ ⦄
 
-definition ℕop := Mk nat_cat_op
+definition ℕop : Category := Mk nat_cat_op
 
 lemma hom_ℕop_id {C : Category} {x : ℕop} {f : x ⟶ x} : f = id := rfl
 
@@ -29,7 +29,7 @@ namespace invcat
   definition id_reflect' {C D: Category} :=
   Π (φ : C ⇒ D) ⦃x y : C⦄ (f : x ⟶ y), (Σ (q : φ x = φ y), q ▹ φ f = id) → Σ (p : x = y),  p ▹ f = id
 
-  -- definition if "refect identity" property specific to ℕop
+  -- definition of "refect identity" property specific to ℕop
   -- though it doesn't require for φ(f) to be identity we will show, that
   -- id_reflect(C,ℕop) and id_reflect_ℕop(C) are logically equivalent
   definition id_reflect_ℕop {C : Category} (φ : C ⇒ ℕop) :=
@@ -56,9 +56,8 @@ namespace invcat
   definition map_ℕop_id_reflect {C : Category} (φ : C ⇒ ℕop):
     id_reflect φ → id_reflect_ℕop φ :=
     begin intros id_r x y f q,
-    -- here we use the fact that any morphism x ⟶ x in ℕop only can be an identity morphism
-    have f_is_id : q ▹ morphism φ f = id, from rfl,
-    cases id_r f ⟨q,f_is_id⟩ with [p₁, p₂], existsi p₁, cases p₁, esimp at *, apply p₂
+    -- here we use the fact that any morphism x ⟶ x in ℕop can only be the identity morphism
+    cases (id_r f ⟨q,@hom_ℕop_id C _ _⟩) with [p₁, p₂], existsi p₁, cases p₁, esimp at *, apply p₂
     end
 
   end id_reflect_ℕop_iff

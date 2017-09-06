@@ -13,7 +13,6 @@ namespace reduced_coslice
   structure red_coslice_obs {A : Type} (C : category A) (c : A) extends coslice_obs C c :=
   (rc_non_id_hom : Π (p : c = to), not (p ▹ hom_to = category.id))
 
-
   -- taken from commented out code in std library and modified
   -- coslice definition is the same, except type (category (coslice_obs C c))
   -- I couldn't find a way to parameterize the definition properly
@@ -31,7 +30,7 @@ namespace reduced_coslice
                 ... = hom_to c : {pr2 g}
             qed) ⟩,
       ID := (λ a, ⟨ id, !id_left ⟩),
-      assoc := (λ a b c d h g f, dpair_eq !assoc    !proof_irrel),
+      assoc := (λ a b c d h g f, sigma.eq !assoc    !proof_irrel),
       id_left := (λ a b f,       sigma.eq !id_left  !proof_irrel),
       id_right := (λ a b f,      sigma.eq !id_right !proof_irrel) ⦄
 
@@ -76,17 +75,20 @@ namespace matching_object
 
   open poly_unit reduced_coslice.red_coslice_obs reduced_coslice.coslice_obs
 
+  lemma limit_nat_unit {C : Category.{1 1}} (X : C ⇒ Type_category) (z : C):
+    limit_obj (limit_in_pretype X) = Nat(𝟙,X) := rfl
+
   definition matching_object.{u} {C : Category.{1 1}} [invcat C] (X : C ⇒ Type_category.{u}) (z : C) :=
     --limit_obj (limit_in_pretype (X ∘f (forget C z)))
     Nat(𝟙, (X ∘f (forget C z)))
 
-  definition matching_obj_map {C : Category.{1 1}} [invC : invcat C] (X : C ⇒ Type_category) (z : C) :
-    X z → matching_object X z :=
+  definition matching_obj_map {C : Category.{1 1}} [invC : invcat C]
+                              (X : C ⇒ Type_category) (z : C)
+             : X z → matching_object X z :=
+             λ x, natural_transformation.mk (λ a u, X (hom_to a) x)
     begin
-      intros x, unfold matching_object, unfold forget, unfold functor.compose,
-      refine natural_transformation.mk (λ a u, X (hom_to a) x) _,
       { intros, esimp, rewrite id_right, cases f with [f_hom, tr], apply funext, intro y,
-        esimp at *,
+        unfold forget, unfold functor.compose, esimp at *,
         unfold red_coslice_obs.to_coslice_obs at *, rewrite -tr,
         apply eq.symm, apply happly (respect_comp X f_hom (hom_to a)) x }
     end
