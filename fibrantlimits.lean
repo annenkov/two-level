@@ -4,6 +4,9 @@ import fibrant matching inverse algebra.category
 open invcat category functor matching_object Fib
      sigma.ops fincat natural_transformation eq
 
+-- Lean's types are pretypes in our formalisation, so the category of types [Types_category] from the standard library is actually the category of pretypes.
+definition Uₛ := category.Type_category
+
 structure subcat_obj (C : Category) (p : objects C → Prop) :=
   (obj : objects C)
   (prop : p obj)
@@ -30,7 +33,7 @@ namespace reedy
 
   -- ref:def:reedy-fibration
   -- Definition 3.12
-  definition is_reedy_fibrant [class] (X : C ⇒ Type_category) :=
+  definition is_reedy_fibrant [class] (X : C ⇒ Uₛ) :=
     Π z, is_fibration_alt (matching_obj_map X z)
 end reedy
 
@@ -122,7 +125,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     apply y_ne_z, assumption
     end
 
-  definition Functor_from_C'_eq (X : C ⇒ Type_category) (z : C) (x' : C_without_z z) :
+  definition Functor_from_C'_eq (X : C ⇒ Uₛ) (z : C) (x' : C_without_z z) :
     X (@obj _ _ x') = (object (Functor_from_C' z X) x') :=
     begin esimp end
 
@@ -151,7 +154,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
               {φ : C ⇒ ℕop} {reflecting_id : id_reflect φ}
               {max_rank : ∀ x, φ x ≤ φ z}
               [is_obj_finite C] [invcat C]
-              (X : C ⇒ Type_category)
+              (X : C ⇒ Uₛ)
 
     definition red_coslice_to_C' (o : x//C_without_z z) : (obj x)//C :=
     begin
@@ -296,7 +299,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
   end MO_facts
 
 
-  definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Type_category) [invC : invcat C]
+  definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Uₛ) [invC : invcat C]
     {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} {reflecting_id : id_reflect φ}
     [rfibX : is_reedy_fibrant X] [finC : is_obj_finite C]
     : is_reedy_fibrant (Functor_from_C' z X)  :=
@@ -340,7 +343,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
       end
 
   -- map from limit of X restricted to C'
-  definition map_L_to_Mz (z : C) (X : C ⇒ Type_category) [invC : invcat C]
+  definition map_L_to_Mz (z : C) (X : C ⇒ Uₛ) [invC : invcat C]
     (L : cone_with_tip (Functor_from_C' z X) poly_unit) : matching_object X z :=
       by cases L with [η, NatSq]; refine natural_transformation.mk
         (λ a u, η (mk (to a) (reduced_coslice_ne z a)) poly_unit.star)
@@ -348,13 +351,13 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
 
 
   -- explicit representation of the limit of X restricted to category C without z
-  definition lim_restricted [reducible] (X : C ⇒ Type_category) (z : C) [invC : invcat C]
+  definition lim_restricted [reducible] (X : C ⇒ Uₛ) (z : C) [invC : invcat C]
   := Σ (c : Π y, (Functor_from_C' z X) y),
         Π (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'),
           ((Functor_from_C' z X) f) (c y) = c y'
 
   -- map from limit of X restricted to C' where we use explicit representation of limit L
-  definition map_L_to_Mz_alt (z : C) (X : C ⇒ Type_category.{u}) [invC : invcat C]
+  definition map_L_to_Mz_alt (z : C) (X : C ⇒ Uₛ.{u}) [invC : invcat C]
   (L : lim_restricted X z) : matching_object X z :=
     match L with
     | ⟨η, NatSq⟩ :=
@@ -373,7 +376,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     esimp, induction p22 using eq.drec, congruence
   end
 
-  definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Type_category.{u}) (z : C) :
+  definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Uₛ.{u}) (z : C) :
   (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
   (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
   (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y'))
@@ -406,7 +409,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
   end
 
   definition lim_two_pieces_eq
-  {X : C ⇒ Type_category.{u}}
+  { X : C ⇒ Uₛ}
   { z : C }
   { c_z : X z}
   { c : Π y, X (obj y) }
@@ -420,7 +423,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
     {φ : C ⇒ ℕop}
     (reflecting_id : id_reflect φ)
     (max_rank : Πy, φ y ≤ φ z)
-    (X : C ⇒ Type_category.{u}) :
+    (X : C ⇒ Uₛ.{u}) :
     (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
       ≃ₛ
     (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
@@ -468,7 +471,7 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
   definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
     is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
 
-  definition fincat_0_limit_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Type_category) : Nat(𝟙,X) ≃ₛ poly_unit :=
+  definition fincat_0_limit_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Uₛ) : Nat(𝟙,X) ≃ₛ poly_unit :=
     begin
     cases φ with [f,g,l,r],
     refine equiv.mk (λ x, star) _ _ _,
@@ -480,8 +483,9 @@ definition no_incoming_non_id_arrows (z : C) {φ : C ⇒ ℕop} {max_rank : ∀ 
 
   -- ref:thm:fibrant-limits
   -- Theorem 3.13
-  definition fibrant_limit.{v} [invC : invcat C] [finC : is_obj_finite C]
-    (X : C ⇒ Type_category) (rfib : is_reedy_fibrant X) :
+  definition fibrant_limit.{v}
+    [invC : invcat C] [finC : is_obj_finite C]
+    (X : C ⇒ Uₛ) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype X)) :=
     begin
       cases finC with [n, ψ],

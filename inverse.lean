@@ -29,11 +29,25 @@ namespace invcat
   definition id_reflect' {C D: Category} :=
   Π (φ : C ⇒ D) ⦃x y : C⦄ (f : x ⟶ y), (Σ (q : φ x = φ y), q ▹ φ f = id) → Σ (p : x = y),  p ▹ f = id
 
-  -- definition if "refect identity" property specific to ℕop
-  -- though it doesn't require for φ(f) to be identity we will show, that
+  definition transport {A : Type} := @eq.rec_on A
+  notation x ≡ y := eq x y
+check @transport
+  definition id_reflect'' {C D: Category} :=
+  Π (φ : C ⇒ D) {x y : C} (f : hom x y),
+  (Σ (q : φ y ≡ φ x), transport q (φ f) ≡ id) → Σ (p : y ≡ x),
+  @transport _ _ _ _ p f ≡ id
+
+
+
+  -- definition if "refect identity" property specific to ℕop.
+  -- Though this definition doesn't require for φ(f) to be an identity, we will show that
   -- id_reflect(C,ℕop) and id_reflect_ℕop(C) are logically equivalent
   definition id_reflect_ℕop {C : Category} (φ : C ⇒ ℕop) :=
     Π ⦃x y : C⦄ (f : x ⟶ y), φ x = φ y → (Σ (p : x = y), p ▹ f = id)
+
+  definition id_reflect_ℕop' {C : Category} (φ : C ⇒ ℕop) :=
+    Π {x y : C} (f : x ⟶ y),
+    φ x ≡ φ y → (Σ (p : x ≡ y), transport p f ≡ id)
 
   -- have to pack functor with the property that it reflects identities,
   -- because functor itself is not a type class
