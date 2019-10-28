@@ -4,7 +4,7 @@ Requires Lean 2 (version 0.2.0) to compile.
 
 Lean 2 installation instructions in Ubuntu : https://github.com/leanprover/lean2/blob/master/doc/make/ubuntu-12.04-detailed.md
 
-Alternatively, use `Docker` image: https://github.com/annenkov/2ltt-docker/blob/master/README.md
+Alternatively, use `Docker` image: https://github.com/annenkov/2ltt-docker
 The image contains Lean 2, our development and Emacs with `lean-mode`, allowing to navigate through the development and compile it.
 
 # Contents
