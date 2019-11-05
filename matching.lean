@@ -1,7 +1,10 @@
 import algebra.category
-import inverse limit fibrant
+import inverse limit fibrant finite
 
 open sigma category eq.ops function
+
+-- Lean's types are pretypes in our formalisation, so the category of types [Types_category] from the standard library is actually the category of pretypes.
+definition Uₛ := category.Type_category
 
 namespace reduced_coslice
   structure coslice_obs {ob : Type} (C : category ob) (a : ob) :=
@@ -14,10 +17,6 @@ namespace reduced_coslice
   (rc_non_id_hom : Π (p : c = to), not (p ▹ hom_to = category.id))
 
 
-  -- taken from commented out code in std library and modified
-  -- coslice definition is the same, except type (category (coslice_obs C c))
-  -- I couldn't find a way to parameterize the definition properly
-  -- Could be some way to define reduced coslice as full subcategory of coslice
   definition reduced_coslice {ob : Type} (C : category ob) (c : ob) : category (red_coslice_obs C c) :=
     ⦃ category,
       hom := λa b, Σ(g : hom (to a) (to b)), g ∘ hom_to a = hom_to b,
@@ -53,20 +52,7 @@ namespace reduced_coslice
 end reduced_coslice
 
 open reduced_coslice
-open invcat --Fib
-
--- -- TODO: definition is exactly the same as for type_category
--- -- should be some way to avoid code repetition
--- definition fib_category : category Fib :=
---   ⦃ category,
---     hom := λ a b, pretype a → pretype b,
---     comp := λ a b c, function.comp ,
---     ID := _,
---     assoc := λ a b c d h g f, eq.symm (function.comp.assoc h g f),
---     id_left := λ a b f,  function.comp.left_id f,
---     id_right := λ a b f, function.comp.right_id f ⦄
-
--- definition FibCat := Mk fib_category
+open invcat
 
 open functor
 
@@ -99,3 +85,15 @@ namespace matching_object
   end
 
 end matching_object
+
+namespace reedy
+  universe variable u
+  variables {C : Category.{1 1}} [invcat C]
+
+  open matching_object
+
+  -- ref:def:reedy-fibration
+  -- Definition 3.12
+  definition is_reedy_fibrant [class] (X : C ⇒ Uₛ) :=
+    Π z, is_fibration_alt (matching_obj_map X z)
+end reedy

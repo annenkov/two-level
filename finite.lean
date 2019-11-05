@@ -1,8 +1,8 @@
 import fibrant data.fin data.equiv facts algebra.category facts
 
-open nat equiv function fin eq.ops sum unit prod.ops function
+open nat equiv fin eq.ops sum unit prod.ops function
 
--- facts about type family indexed by strict finite type
+-- facts about a type family indexed by the strict finite type
 
 definition pi_fin0_unit_equiv {X : fin 0 → Type} : (Π i, X i) ≃ₛ unit :=
   equiv.mk (λ x, unit.star) (λ x i, fin.elim0 i)
