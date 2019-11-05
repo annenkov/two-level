@@ -66,11 +66,10 @@ namespace fiblimits
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
         -- that L is fibrant (from IH)
-        have rfibX' : is_reedy_fibrant (Functor_from_C' z X), from @Functor_from_C'_reedy_fibrant _ z X inv_C φ z_max_φ idrefl rfib ⟨_,ψ⟩,
-        assert isFibL: is_fibrant (lim_restricted X z),
-          begin
-          refine (@equiv_is_fibrant _ _ nat_unit_sigma_equiv _), apply IHn, apply rfibX', apply finC'
-          end,
+        have rfibX' : is_reedy_fibrant (Functor_from_C' z X),
+           from @Functor_from_C'_reedy_fibrant _ z X inv_C φ z_max_φ idrefl rfib ⟨_,ψ⟩,
+        have isFibL: is_fibrant (lim_restricted X z),
+           from @equiv_is_fibrant _ _ nat_unit_sigma_equiv (IHn _ _ _ _ _),
         refine @fibration_domain_is_fibrant _ (Fib.mk _ isFibL) (λpb, pb.1) _,
         refine Pullback'_is_fibrant q p, apply fibration_q
       }
