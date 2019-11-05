@@ -21,6 +21,7 @@ namespace fiblimits
     [invC : invcat C] [finC : is_obj_finite C]
     (X : C ⇒ Uₛ) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype X)) :=
+
     begin
       cases finC with [n, ψ],
       revert ψ, revert rfib, revert invC, revert X, revert C,
@@ -49,28 +50,32 @@ namespace fiblimits
         let p := map_L_to_Mz_alt z X,
         apply equiv_is_fibrant, apply equiv.symm,
 
+        let C' := C_without_z z,
+        let X' := Functor_from_C' z X,
+        let limX' := lim_restricted X z,
+
         calc
-                (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
-             ≃ₛ (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
-                 (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) × (Π (y y' : C_without_z z)
-                 (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y')) : limit_two_piece_limit_equiv ψ idrefl z_max_φ
+        (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
+             ≃ₛ (Σ c_z c,
+                  (Π (y : C') (f : z ⟶ obj y ), X f c_z = c y) ×
+                  (Π (y y' : C') (f : @hom (subcat_obj _ _) _ y y'), X' f (c y) = c y')) : limit_two_piece_limit_equiv ψ idrefl z_max_φ
                  /-- get a pullback of the span
-                   [L --p--> matching_object M Z <<--q-- X z]
-                   where L is the limit of X restricted to C_without_z
-                   (so, L is Nat(𝟙,Functor_from_C' z X)) -/
-         ... ≃ₛ (Σ (c_z : X z) d, p d = q c_z) : two_piece_limit_pullback_p_q_equiv
-         ... ≃ₛ (Σ d (c_z : X z), p d = q c_z) : equiv.sigma_swap
-         ... ≃ₛ (Σ d (c_z : X z), q c_z = p d) : by apply @sigma_congr₂; intros;
-                                                     apply @sigma_congr₂; intros;
-                                                     apply (iff_impl_equiv (iff.intro eq.symm eq.symm)),
+                   [lim X' --p--> matching_object M Z <<--q-- X z]
+                   where lim X' is the limit of X restricted to C'
+                   (so, L is Nat(𝟙,X')) -/
+         ... ≃ₛ (Σ c_z d, p d = q c_z) : two_piece_limit_pullback_p_q_equiv
+         ... ≃ₛ (Σ d c_z, p d = q c_z) : equiv.sigma_swap
+         ... ≃ₛ (Σ d c_z, q c_z = p d) : by apply @sigma_congr₂; intros;
+                                             apply @sigma_congr₂; intros;
+                                             apply (iff_impl_equiv (iff.intro eq.symm eq.symm)),
 
         -- to show that this pullback is fibrant we use facts that q is a fibration (from Reedy fibrancy of X) and
-        -- that L is fibrant (from IH)
-        have rfibX' : is_reedy_fibrant (Functor_from_C' z X),
+        -- that limX' is fibrant (from IH)
+        have rfibX' : is_reedy_fibrant X',
            from @Functor_from_C'_reedy_fibrant _ z X inv_C φ z_max_φ idrefl rfib ⟨_,ψ⟩,
-        have isFibL: is_fibrant (lim_restricted X z),
+        have isFibLimX': is_fibrant limX',
            from @equiv_is_fibrant _ _ nat_unit_sigma_equiv (IHn _ _ _ _ _),
-        refine @fibration_domain_is_fibrant _ (Fib.mk _ isFibL) (λpb, pb.1) _,
+        refine @fibration_domain_is_fibrant _ (Fib.mk _ isFibLimX') (λpb, pb.1) _,
         refine Pullback'_is_fibrant q p, apply fibration_q
       }
     end
