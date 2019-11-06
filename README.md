@@ -22,6 +22,7 @@ The image contains Lean 2, our development and Emacs with `lean-mode`, allowing 
 | fibrantlimits.lean  | a proof of the theorem that every Reedy fibrant diagram on a category with finite type of objects has a fibrant limit
 | simplicial.lean     | initial definition of semi-simplicial types (work in progress)
 | facts.lean          | some auxiliary lemmas which we could not find in the standard library
+| types/*             | examples of reasoning in the inner (fibrant) theore. Mainly, ported from Lean 2 HoTT library.
 
 # Compilation
 
