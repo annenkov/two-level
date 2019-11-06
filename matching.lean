@@ -63,7 +63,7 @@ namespace matching_object
   open poly_unit reduced_coslice.red_coslice_obs reduced_coslice.coslice_obs
 
   definition matching_object.{u} {C : Category.{1 1}} [invcat C] (X : C ⇒ Type_category.{u}) (z : C) :=
-    --limit_obj (limit_in_pretype (X ∘f (forget C z)))
+    -- we use an explicit definition of [limit_obj (limit_in_pretype (X ∘f (forget C z)))]: a natural transformation from the contstant functor
     Nat(𝟙, (X ∘f (forget C z)))
 
   definition matching_obj_map {C : Category.{1 1}} [invC : invcat C] (X : C ⇒ Type_category) (z : C) :

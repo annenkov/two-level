@@ -19,7 +19,7 @@ definition Pullback' : Type := Σ (b : B), fibreₛ f (g b)
 
 open sigma.ops
 
--- ref:lem:fibrant-pullback
+-- ref:lem:fib-closure:pb
 -- Lemma 3.10
 definition Pullback'_is_fibrant :
   is_fibration_alt (λ (pb : Pullback' f g), pb.1) :=

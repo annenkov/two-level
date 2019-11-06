@@ -25,12 +25,13 @@ namespace fiblimits
     begin
       cases finC with [n, ψ],
       revert ψ, revert rfib, revert invC, revert X, revert C,
+      -- induction on the cardinality of |C|
       induction n with [n', IHn],
       { intros C X invC rfib ψ, apply equiv_is_fibrant.{v} (@fincat_0_limit_unit_equiv _ ψ X)⁻¹ },
       { intros C X invC rfib ψ, esimp,
         have inv_C : invcat C, from invC,
         cases invC, cases reflecting_id_ℕop with [φ, idrefl],
-        -- choosing an element of C with maximal rank
+        -- choosing an element of C with the maximal rank
         have H : Σ z, (Π (y : C), φ y ≤ φ z), from @max_fun_to_ℕ _ φ _ ψ,
         cases H with [z, z_max_φ],
 
@@ -55,7 +56,8 @@ namespace fiblimits
         let limX' := lim_restricted X z,
 
         calc
-        (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
+        (Σ (c : Π y, X y), Π y y' f, X f (c y) = c y')
+                 -- split the limit in two pieces
              ≃ₛ (Σ c_z c,
                   (Π (y : C') (f : z ⟶ obj y ), X f c_z = c y) ×
                   (Π (y y' : C') (f : @hom (subcat_obj _ _) _ y y'), X' f (c y) = c y')) : limit_two_piece_limit_equiv ψ idrefl z_max_φ
