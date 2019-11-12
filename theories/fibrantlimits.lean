@@ -1,5 +1,5 @@
-import fibrant fibrantlimits_aux matching inverse algebra.category
-       limit pullbacks finite
+import .fibrant .fibrantlimits_aux .matching .inverse algebra.category
+       .limit .pullbacks .finite
 import data.fin
 
 open invcat category functor matching_object Fib

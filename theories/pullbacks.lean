@@ -1,4 +1,4 @@
-import fibrant limit data.equiv algebra.category facts
+import .fibrant .limit data.equiv algebra.category .facts
 
 open function
 

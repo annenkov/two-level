@@ -3,7 +3,7 @@
 import algebra.category data.nat
 import algebra.category.constructions
 
-import fibrant finite
+import .fibrant .finite
 
 import open nat
 

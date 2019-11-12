@@ -9,6 +9,8 @@ The image contains Lean 2, our development and Emacs with `lean-mode`, allowing 
 
 # Contents
 
+Files in the `theories` directory:
+
 | File | |
 |--------------------|:--------------------------------------------------------------------:
 | fibrant.lean        | implementation of the two-level type theory

@@ -1,5 +1,5 @@
 import algebra.category
-import inverse limit fibrant finite matching
+import .inverse .limit .fibrant .finite .matching
 
 open sigma category eq.ops function functor
 

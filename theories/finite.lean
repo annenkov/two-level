@@ -1,4 +1,4 @@
-import fibrant data.fin data.equiv facts algebra.category facts
+import .fibrant data.fin data.equiv .facts algebra.category .facts
 
 open nat equiv fin eq.ops sum unit prod.ops function
 

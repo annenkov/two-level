@@ -1,8 +1,10 @@
+DEVDIR = ./theories
+
 build :
 	linja
 
 clean :
-	rm *.clean *.olean *.d *.ilean
-	rm ./types/*.clean ./types/*.olean ./types/*.d ./types/*.ilean
+	rm $(DEVDIR)/*.clean $(DEVDIR)/*.olean $(DEVDIR)/*.d $(DEVDIR)/*.ilean
+	rm $(DEVDIR)/types/*.clean $(DEVDIR)/types/*.olean $(DEVDIR)/types/*.d $(DEVDIR)/types/*.ilean
 
 default : build

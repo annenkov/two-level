@@ -1,4 +1,4 @@
-import data.equiv algebra.category facts
+import data.equiv algebra.category .facts
 
 open natural_transformation sigma.ops
 open category function equiv
