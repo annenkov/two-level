@@ -1,10 +1,11 @@
-DEVDIR = ./theories
+all:
+	$(MAKE) -C 2ltt
 
-build :
-	linja
+docker:
+	docker build -t lean-image .
 
-clean :
-	rm $(DEVDIR)/*.clean $(DEVDIR)/*.olean $(DEVDIR)/*.d $(DEVDIR)/*.ilean
-	rm $(DEVDIR)/types/*.clean $(DEVDIR)/types/*.olean $(DEVDIR)/types/*.d $(DEVDIR)/types/*.ilean
+run-image:
+	docker run -it lean-image
 
-default : build
+clean:
+	$(MAKE) clean -C 2ltt
