@@ -15,7 +15,7 @@ Files in the `2ltt` directory:
 | fibrantlimits.lean  | a proof of the fibrant limit theorem (Section 4.3, Theorem 4.8.)
 | simplicial.lean     | initial definition of semi-simplicial types (work in progress)
 | facts.lean          | some auxiliary lemmas which we could not find in the standard library
-| types/*             | examples of reasoning in the inner (fibrant) theore. Mainly, ported from the Lean 2 HoTT library.
+| types/*             | some examples of reasoning in the inner (fibrant) theory. Mainly, ported from the Lean 2 HoTT library.
 
 ## Compilation
 
