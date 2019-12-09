@@ -213,8 +213,7 @@ definition nat_trans_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G}
 definition natural_map_eq {C D : Category} {F G : C ⇒ D} {N M: F ⟹ G} (p : N = M) : natural_map N = natural_map M
   := begin cases N with [η, NatSq], cases M with [η', NatSq'], unfold natural_map, injection p, assumption  end
 
--- ref:lem:all-strict-limits
--- Lemma 3.9
+
 definition limit_in_pretype {J : Category.{1}} (D : J ⇒ Type_category) : limit D :=
   ⦃ has_terminal_obj _,
     terminal := cone_in_pretype D,

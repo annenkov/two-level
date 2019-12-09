@@ -4,14 +4,14 @@ open nat equiv fin eq.ops sum unit prod.ops function
 
 -- facts about a type family indexed by the strict finite type
 
-definition pi_fin0_unit_equiv {X : fin 0 → Type} : (Π i, X i) ≃ₛ unit :=
+definition pi_fin0_unit_equiv {X : fin 0 → Type} : (Π i, X i) ≃ unit :=
   equiv.mk (λ x, unit.star) (λ x i, fin.elim0 i)
   begin unfold left_inverse, intro, apply funext, intro, apply (elim0 x_1) end
   begin
   intro, cases x, reflexivity
   end
 
-lemma pi_sum_fin_unit_equiv {n} {X : (unit + fin n) → Type} : (Π i, X i) ≃ₛ (X (inl ⋆) × Π i, X (inr i)) :=
+lemma pi_sum_fin_unit_equiv {n} {X : (unit + fin n) → Type} : (Π i, X i) ≃ (X (inl ⋆) × Π i, X (inr i)) :=
   equiv.mk
     (λ x, (x (inl ⋆), λ y, x (inr y)))
     (λ p, λ z, sum.cases_on z (λ x1, unit.cases_on x1 p.1) (λ x2, p.2 x2))
@@ -25,9 +25,9 @@ lemma pi_sum_fin_unit_equiv {n} {X : (unit + fin n) → Type} : (Π i, X i) ≃�
     unfold right_inverse, unfold left_inverse, apply prod.eta
   end
 
-definition pi_sum_fin_unit_equiv' {n} (Heq : fin n + unit ≃ₛ fin (nat.succ n))
+definition pi_sum_fin_unit_equiv' {n} (Heq : fin n + unit ≃ fin (nat.succ n))
       {X : fin (nat.succ n) → Type}
-      : (Π i, X (Heq ∙ i)) ≃ₛ (X (Heq ∙ (inr ⋆)) × Π i, X (Heq ∙ (inl i))) :=
+      : (Π i, X (Heq ∙ i)) ≃ (X (Heq ∙ (inr ⋆)) × Π i, X (Heq ∙ (inl i))) :=
  equiv.mk
    (λ x, (x (inr ⋆), λ y, x (inl y)))
    (λ p, λ z, sum.cases_on z (λ x2, p.2 x2) (λ x1, unit.cases_on x1 p.1))
@@ -40,13 +40,13 @@ definition pi_sum_fin_unit_equiv' {n} (Heq : fin n + unit ≃ₛ fin (nat.succ n
    end
 
 -- ref:lem:finite-cofibrant
--- Lemma 3.1
+-- Lemma 3.23 (iii)
 definition finite_cofibrant {n : ℕ} {X : fin n → Fib}
   : is_fibrant (Π i, X i) :=
   begin
     induction n with n IHn,
     { apply (equiv_is_fibrant (equiv.symm pi_fin0_unit_equiv)) },
-    { have HeqFinSum : fin n + unit ≃ₛ fin (succ n), from (fin_sum_unit_equiv n),
+    { have HeqFinSum : fin n + unit ≃ fin (succ n), from (fin_sum_unit_equiv n),
       apply equiv_is_fibrant,
         apply pi_congr₁,
         apply equiv_is_fibrant, apply (equiv.symm (pi_sum_fin_unit_equiv' HeqFinSum))}

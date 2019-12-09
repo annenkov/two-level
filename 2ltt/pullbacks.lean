@@ -7,7 +7,7 @@ section pullback
 universe variable u
 variables {A B C : Type.{u}}
           (f : A → C) (g : B → C)
-          {isfib : is_fibration_alt f}
+          {isfib : is_fibration f}
 
 structure Pullback (f : A → C) (g : B → C):=
   (pA : A)
@@ -20,9 +20,9 @@ definition Pullback' : Type := Σ (b : B), fibreₛ f (g b)
 open sigma.ops
 
 -- ref:lem:fib-closure:pb
--- Lemma 3.10
+-- Lemma 3.9 (i)
 definition Pullback'_is_fibrant :
-  is_fibration_alt (λ (pb : Pullback' f g), pb.1) :=
+  is_fibration (λ (pb : Pullback' f g), pb.1) :=
   λ b, @equiv_is_fibrant _ _ (equiv.symm (fibre_projection b)) (isfib (g b))
 
 -- Inspired by the implementation from HoTT Lean library

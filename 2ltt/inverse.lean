@@ -24,7 +24,7 @@ definition ℕop := Mk nat_cat_op
 lemma hom_ℕop_id {C : Category} {x : ℕop} {f : x ⟶ x} : f = id := rfl
 
 -- ref:def:inverse-category
--- Definition 3.8
+-- Definition 4.1
 namespace invcat
   open sigma.ops iff
   definition id_reflect {C D: Category} (φ : C ⇒ D) :=
@@ -182,10 +182,10 @@ definition C_without_z_invcat [instance] (z : C) [invC : invcat C] : invcat (C_w
 
 open equiv equiv.ops sigma sigma.ops
 
-definition C_without_z_sigma_equiv {C : Category} (z : C) : C_without_z z ≃ₛ Σ (c : C), c ≠ z :=
+definition C_without_z_sigma_equiv {C : Category} (z : C) : C_without_z z ≃ Σ (c : C), c ≠ z :=
 equiv.mk (λ c', ⟨obj c', prop c'⟩) (λc, mk c.1 c.2) begin intros, cases x, esimp, end begin intros, cases x, esimp end
 
-definition C_without_z_is_obj_finite [instance] {n : ℕ} (z : C) [φ : objects C ≃ₛ fin (nat.succ n)]
-: objects (C_without_z z) ≃ₛ fin n :=  (fincat.fincat_ob_remove_fin_equiv z) ∘ (C_without_z_sigma_equiv z)
+definition C_without_z_is_obj_finite [instance] {n : ℕ} (z : C) [φ : objects C ≃ fin (nat.succ n)]
+: objects (C_without_z z) ≃ fin n :=  (fincat.fincat_ob_remove_fin_equiv z) ∘ (C_without_z_sigma_equiv z)
 
 end subcategory

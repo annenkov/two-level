@@ -4,7 +4,7 @@ import .inverse .limit .fibrant .finite
 open sigma category eq.ops function
 
 -- Lean's types are pretypes in our formalisation, so the category of types [Types_category] from the standard library is actually the category of pretypes.
-definition Uₛ := category.Type_category
+definition U := category.Type_category
 
 namespace reduced_coslice
   structure coslice_obs {ob : Type} (C : category ob) (a : ob) :=
@@ -35,7 +35,7 @@ namespace reduced_coslice
       id_right := (λ a b f,      sigma.eq !id_right !proof_irrel) ⦄
 
   -- ref:def:reduced-coslice
-  -- Definition 3.7
+  -- Definition 4.2
   definition ReducedCoslice (C : Category) (c : C) := Mk (reduced_coslice C c)
 
   notation c `//` C := ReducedCoslice C c
@@ -57,7 +57,7 @@ open invcat
 open functor
 
 -- ref:def:matching-object
--- Definition 3.11
+-- Definition 4.4
 namespace matching_object
 
   open poly_unit reduced_coslice.red_coslice_obs reduced_coslice.coslice_obs
@@ -93,7 +93,7 @@ namespace reedy
   open matching_object
 
   -- ref:def:reedy-fibration
-  -- Definition 3.12
-  definition is_reedy_fibrant [class] (X : C ⇒ Uₛ) :=
-    Π z, is_fibration_alt (matching_obj_map X z)
+  -- Definition 4.6 (a Reedy fibrant diagram)
+  definition is_reedy_fibrant [class] (X : C ⇒ U) :=
+    Π z, is_fibration (matching_obj_map X z)
 end reedy

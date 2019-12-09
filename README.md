@@ -5,17 +5,17 @@ Files in the `2ltt` directory:
 | File | |
 |--------------------|:--------------------------------------------------------------------:
 | fibrant.lean        | implementation of the two-level type theory
-| finite.lean         | facts about finite sets and categories
+| finite.lean         | facts about finite sets and categories with a finite set of objects
 | limit.lean          | definition of limits and construction of limits in category of pretypes
-| inverse.lean        | definition of inverse categories
+| inverse.lean        | definition of inverse categories (Section 4.2)
 | pullbacks.lean      | definition of a pullback, constructed explicitly and using the limit of a diagram along with a proof these definitions are equivalent. Proof of that fibrations are closed under pullbacks.
-| matching.lean       | definition of the matching object
+| matching.lean       | definition of the matching object (Section 4.3)
 | matching_facts.lean | facts about the matching object from the category C with one object removed
 | fibrantlimits_aux.lean  | auxiliary lemmas for the proof of the fibrant limits theorem including equivalences forming the core of the proof
-| fibrantlimits.lean  | a proof of the theorem that every Reedy fibrant diagram on a category with finite type of objects has a fibrant limit
+| fibrantlimits.lean  | a proof of the fibrant limit theorem (Section 4.3, Theorem 4.8.)
 | simplicial.lean     | initial definition of semi-simplicial types (work in progress)
 | facts.lean          | some auxiliary lemmas which we could not find in the standard library
-| types/*             | examples of reasoning in the inner (fibrant) theore. Mainly, ported from Lean 2 HoTT library.
+| types/*             | examples of reasoning in the inner (fibrant) theore. Mainly, ported from the Lean 2 HoTT library.
 
 ## Compilation
 

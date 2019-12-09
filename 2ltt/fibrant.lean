@@ -2,13 +2,14 @@ import data.equiv .facts
 
 open eq
 
-notation X `≃ₛ` Y := equiv X Y
+-- we use the isomorphism definition from the standard library
+notation X `≃` Y := equiv X Y
 constant is_fibrant' : Type → Prop
 
 structure is_fibrant [class] (X : Type) := mk ::
   fib_internal : is_fibrant' X
 
-constant equiv_is_fibrant {X Y : Type}(e : X ≃ₛ Y)[fib : is_fibrant X] : is_fibrant Y
+constant equiv_is_fibrant {X Y : Type}(e : X ≃ Y)[fib : is_fibrant X] : is_fibrant Y
 
 constant unit_is_fibrant' : is_fibrant' unit
 constant polyunit_is_fibrant' : is_fibrant' poly_unit
@@ -30,20 +31,27 @@ constant prod_is_fibrant' {X Y : Type}
 -- otherwise, proofs fail to unify level variables sometime
 constant fib_eq.{u} {X : Type.{u}}[is_fibrant X] : X → X → Type.{u}
 
+-- the inner equality (or path-equality) type (in the sense of HoTT)
 namespace fib_eq
-  notation x ~ y := fib_eq x y
-  constant refl {X : Type}[is_fibrant X](x : X) : x ~ x
-  constant elim {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
-                [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
-                (d : P x (refl x)) : Π (y : X)(p : x ~ y), P y p
-  constant elim_β {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x ~ y → Type}
-                [Π (y : X)(p : x ~ y), is_fibrant (P y p)]
-                (d : P x (refl x)) : elim d x (refl x) = d
+  infix ` =ᵒ `:28 := fib_eq
+  constant reflo {X : Type}[is_fibrant X](x : X) : x =ᵒ x
+  notation ` reflᵒ ` := reflo
 
-  definition idp [reducible] [constructor] {X : Type}[is_fibrant X] {a : X} := refl a
+  constant elimo {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x =ᵒ y → Type}
+                [Π (y : X)(p : x =ᵒ y), is_fibrant (P y p)]
+                (d : P x (reflᵒ x)) : Π (y : X)(p : x =ᵒ y), P y p
+  notation ` elimᵒ ` := elimo
 
-  attribute elim_β [simp]
-  attribute elim [recursor]
+  constant elimo_β {X : Type}[is_fibrant X]{x : X}{P : Π (y : X), x =ᵒ y → Type}
+                [Π (y : X)(p : x =ᵒ y), is_fibrant (P y p)]
+                (d : P x (reflᵒ x)) : elimᵒ d x (reflᵒ x) = d
+
+  notation ` elim_βᵒ ` := elimo_β
+
+  definition idp [reducible] [constructor] {X : Type}[is_fibrant X] {a : X} := reflo a
+
+  attribute elimo_β [simp]
+  attribute elimo [recursor]
 end fib_eq
 
 constant fib_eq_is_fibrant' {X : Type}[is_fibrant X](x y : X) : is_fibrant' (fib_eq x y)
@@ -93,60 +101,60 @@ namespace fib_eq
   variables {Y: Fib}
   variables {Z: Fib}
 
-  attribute refl [refl]
-  definition symm [symm] {x y : X} : x ~ y → y ~ x :=
-    elim (refl x) y
-  definition symm_β [simp] {x : X} : symm (refl x) = refl x :=
-    elim_β (refl x)
-  definition trans [trans] {x y z : X} : x ~ y → y ~ z → x ~ z := λ p,
-    elim p z
+  attribute reflo [refl]
+  definition symm [symm] {x y : X} : x =ᵒ y → y =ᵒ x :=
+    elimᵒ (reflᵒ x) y
+  definition symm_β [simp] {x : X} : symm (reflᵒ x) = reflᵒ x :=
+    elim_βᵒ (reflᵒ x)
+  definition trans [trans] {x y z : X} : x =ᵒ y → y =ᵒ z → x =ᵒ z := λ p,
+    elimᵒ p z
 
-  definition trans_β [simp] {x y : X}(p : x ~ y) : trans p (refl y) = p :=
-    elim_β p
+  definition trans_β [simp] {x y : X}(p : x =ᵒ y) : trans p (reflᵒ y) = p :=
+    elim_βᵒ p
 
-  definition trans_β' [simp] {x : X} : trans (refl x) (refl x) = refl x := by simp
+  definition trans_β' [simp] {x : X} : trans (reflᵒ x) (reflᵒ x) = reflᵒ x := by simp
 
-  definition trans' {x y z : X} (p : x ~ y) (q : y ~ z) : x ~ z :=
-    (elim (elim idp z) y) p q
+  definition trans' {x y z : X} (p : x =ᵒ y) (q : y =ᵒ z) : x =ᵒ z :=
+    (elimᵒ (elimᵒ idp z) y) p q
 
   -- Alternative proof of transitivity using tactics.
-  definition trans'' {x y z : X} (p: x ~ y) (q : y ~ z) : x ~ z :=
-  by induction p using elim; exact q
+  definition trans'' {x y z : X} (p: x =ᵒ y) (q : y =ᵒ z) : x =ᵒ z :=
+  by induction p using elimo; exact q
 
   definition transport [subst] {x y : X}{P : X → Type}[Π (x : X), is_fibrant (P x)]
-                           (p : x ~ y)(d : P x) : P y :=
-    elim d y p
+                           (p : x =ᵒ y)(d : P x) : P y :=
+    elimᵒ d y p
   definition transport_β [simp] {x : X}{P : X → Type}[Π (x : X), is_fibrant (P x)](d : P x) :
-                     transport (refl x) d = d :=
-    elim_β d
+                     transport (reflᵒ x) d = d :=
+    elim_βᵒ d
 
   notation p ▹ d := transport p d
 
   infixl ⬝ := trans
   postfix ⁻¹ := symm
 
-  definition symm_trans {x y : X} (p : x ~ y) : p⁻¹ ⬝ p ~ refl y :=
-  by induction p using elim; simp
+  definition symm_trans {x y : X} (p : x =ᵒ y) : p⁻¹ ⬝ p =ᵒ reflᵒ y :=
+  by induction p using elimo; simp
 
-  definition symm_trans_β {x : X} : (refl x)⁻¹ ⬝ (refl x) = refl x := by simp
+  definition symm_trans_β {x : X} : (reflᵒ x)⁻¹ ⬝ (reflᵒ x) = reflᵒ x := by simp
 
-  definition assoc_trans {x y z t: X} (p : x ~ y) (q : y ~ z) (r : z ~ t) :
-    (p ⬝ (q ⬝ r)) ~ ((p ⬝ q) ⬝ r) :=
-  by induction r using elim; simp
+  definition assoc_trans {x y z t: X} (p : x =ᵒ y) (q : y =ᵒ z) (r : z =ᵒ t) :
+    (p ⬝ (q ⬝ r)) =ᵒ ((p ⬝ q) ⬝ r) :=
+  by induction r using elimo; simp
 
   definition transport_trans {A : Fib } {a b c: A} {P : A → Fib}
-    (p : a ~ b) (q : b ~ c) (u : P a) : #fib_eq q ▹ (p ▹ u) ~ p ⬝ q ▹ u :=
-    by induction p using elim; induction q using elim; simp
+    (p : a =ᵒ b) (q : b =ᵒ c) (u : P a) : #fib_eq q ▹ (p ▹ u) =ᵒ p ⬝ q ▹ u :=
+    by induction p using elimo; induction q using elimo; simp
 
-   definition eq_transport_l {a₁ a₂ a₃ : X} (p : a₁ ~ a₂) (q : a₁ ~ a₃) :
-   p ▹ q ~ p⁻¹ ⬝ q :=
-   by induction p using elim; induction q using elim; simp
+   definition eq_transport_l {a₁ a₂ a₃ : X} (p : a₁ =ᵒ a₂) (q : a₁ =ᵒ a₃) :
+   p ▹ q =ᵒ p⁻¹ ⬝ q :=
+   by induction p using elimo; induction q using elimo; simp
 
-   definition eq_transport_r {a₁ a₂ a₃ : X} (p : a₂ ~ a₃) (q : a₁ ~ a₂) :
-   p ▹ q ~ q ⬝ p :=
-   by induction p using elim; induction q using elim; simp
+   definition eq_transport_r {a₁ a₂ a₃ : X} (p : a₂ =ᵒ a₃) (q : a₁ =ᵒ a₂) :
+   p ▹ q =ᵒ q ⬝ p :=
+   by induction p using elimo; induction q using elimo; simp
 
-   definition to_fib_eq { x y : X } : x = y -> x ~ y := eq.rec (refl _)
+   definition to_fib_eq { x y : X } : x = y -> x =ᵒ y := eq.rec (reflᵒ _)
 
   namespace ap
     -- action on paths
@@ -155,37 +163,37 @@ namespace fib_eq
     notation p `▹s` x := eq.rec_on p x
 
 
-    definition ap {x y : X} (f : X -> Y) : x ~ y -> f x ~ f y :=
-      elim (refl _) _
+    definition ap {x y : X} (f : X -> Y) : x =ᵒ y -> f x =ᵒ f y :=
+      elimᵒ (reflᵒ _) _
 
-    definition ap_β [simp] {x : X} (f : X -> Y) : ap f (refl x) = refl (f x) := elim_β (refl (f x))
+    definition ap_β [simp] {x : X} (f : X -> Y) : ap f (reflᵒ x) = reflᵒ (f x) := elim_βᵒ (reflᵒ (f x))
 
-    definition ap_trans {x y z : X} (f : X → Y) (p : x ~ y) (q : y ~ z) :
-      ap f (p ⬝ q) ~ (ap f p) ⬝ (ap f q) := by induction p using elim; induction q using elim; simp
+    definition ap_trans {x y z : X} (f : X → Y) (p : x =ᵒ y) (q : y =ᵒ z) :
+      ap f (p ⬝ q) =ᵒ (ap f p) ⬝ (ap f q) := by induction p using elimo; induction q using elimo; simp
 
-    definition ap_symm {x y : X} (f : X → Y) (p : x ~ y) : ap f p⁻¹ ~ (ap f p)⁻¹ :=
-      by induction p using elim; simp
+    definition ap_symm {x y : X} (f : X → Y) (p : x =ᵒ y) : ap f p⁻¹ =ᵒ (ap f p)⁻¹ :=
+      by induction p using elimo; simp
 
-    definition ap_compose {x y : X} (f : X → Y) (g : Y → Z) (p : x ~ y) : ap g (ap f p) ~ ap (g ∘ f) p :=
-      by induction p using elim; simp
+    definition ap_compose {x y : X} (f : X → Y) (g : Y → Z) (p : x =ᵒ y) : ap g (ap f p) =ᵒ ap (g ∘ f) p :=
+      by induction p using elimo; simp
 
-    definition ap_id {x y : X} (p : x ~ y) : ap id p ~ p := by induction p using elim; simp
+    definition ap_id {x y : X} (p : x =ᵒ y) : ap id p =ᵒ p := by induction p using elimo; simp
 
     definition ap₂ [reducible] {x x' : X} {y y' : Y} (f : X -> Y -> Z)
-      (p : x ~ x') (q : y ~ y') : f x y ~ f x' y' := (ap (λ x, f x y) p) ⬝ (ap (f x') q)
+      (p : x =ᵒ x') (q : y =ᵒ y') : f x y =ᵒ f x' y' := (ap (λ x, f x y) p) ⬝ (ap (f x') q)
 
-    definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (refl x) (refl y) = refl (f x y) :=
+    definition ap₂_β {x : X} {y : Y} (f : X -> Y -> Z) : ap₂ _ (reflᵒ x) (reflᵒ y) = reflᵒ (f x y) :=
       by simp
 
-    definition apd {P : X → Fib} (f : Π x, P x) {x y : X} (p : x ~ y) : p ▹ f x ~ f y :=
-      by induction p using elim; rewrite transport_β
+    definition apd {P : X → Fib} (f : Π x, P x) {x y : X} (p : x =ᵒ y) : p ▹ f x =ᵒ f y :=
+      by induction p using elimo; rewrite transport_β
 
     definition apd_β {P : X → Fib} (f : Π x, P x) {x y : X} :
-      apd f (refl x) = (eq.symm (transport_β _) ▹s refl (f x)) := elim_β _
+      apd f (reflᵒ x) = (eq.symm (transport_β _) ▹s reflᵒ (f x)) := elim_βᵒ _
 
     definition apd_β' {P : X → Fib} (f : Π x, P x) {x y : X} :
-    ((transport_β (f x)) ▹s (apd f (refl x))) = refl (f x) :=
-    by unfold apd; rewrite elim_β; rewrite eq.transport_concat
+    ((transport_β (f x)) ▹s (apd f (reflᵒ x))) = reflᵒ (f x) :=
+    by unfold apd; rewrite elimo_β; rewrite eq.transport_concat
 
   end ap
 
@@ -200,12 +208,12 @@ variables {C: Fib}
 
 structure is_contr (X : Type)[is_fibrant X] := mk ::
   (center : X)
-  (contraction : Π (x : X), center ~ x)
+  (contraction : Π (x : X), center =ᵒ x)
 
 open sigma.ops is_contr
 
 definition is_contr_equiv [instance] {X : Type}[is_fibrant X] :
-  (Σ (c : X), Π (x : X), c ~ x) ≃ₛ is_contr X :=
+  (Σ (c : X), Π (x : X), c =ᵒ x) ≃ is_contr X :=
   equiv.mk
     (λ a, is_contr.mk a.1 (λx, a.2 x))
     (λ a, ⟨center a,(λx, contraction a x)⟩)
@@ -217,9 +225,9 @@ definition is_contr_is_fibrant [instance] (X : Type)[is_fibrant X] : is_fibrant 
 
 definition is_trunc : Π (n : ℕ)(X : Type) [is_fibrant X], Type
 | @is_trunc 0 X fib := is_contr X
-| @is_trunc (nat.succ n) X fib := Π (x y : X), is_trunc n (x ~ y)
+| @is_trunc (nat.succ n) X fib := Π (x y : X), is_trunc n (x =ᵒ y)
 
-definition is_prop (X : Type) [is_fibrant X] := Π (x y : X), x ~ y
+definition is_prop (X : Type) [is_fibrant X] := Π (x y : X), x =ᵒ y
 
 section truncated_types
   variables (X : Fib)
@@ -227,10 +235,10 @@ section truncated_types
   definition is_contr_is_trunc :
     is_contr X → is_trunc 1 X :=
     assume c : is_contr X,
-    let path (x y : X) : x ~ y :=
+    let path (x y : X) : x =ᵒ y :=
         symm (is_contr.contraction c x) ⬝ is_contr.contraction c y in
-    let l (x y : X)(p : x ~ y) : path x y ~ p :=
-        fib_eq.elim (!symm_trans) y p in
+    let l (x y : X)(p : x =ᵒ y) : path x y =ᵒ p :=
+        elimᵒ (!symm_trans) y p in
     λ x y, is_contr.mk (path x y) (l x y)
 
   definition inhab_is_contr_is_prop : (X → is_contr X) → is_trunc 1 X :=
@@ -250,16 +258,16 @@ end truncated_types
 
 section singleton
   variables {X : Fib}
-  definition singleton [reducible] (x : X) := Σ (y : X), y ~ x
+  definition singleton [reducible] (x : X) := Σ (y : X), y =ᵒ x
   definition singleton_contr (x : X) : is_contr (singleton x) :=
-    let l (y : X)(p : y ~ x) : ⟨x , refl x⟩ ~ ⟨y, p⟩ := elim !refl x p in
-    is_contr.mk ⟨x, refl x⟩ (λt, match t with ⟨y, p⟩ := l y p end)
+    let l (y : X)(p : y =ᵒ x) : ⟨x , reflᵒ x⟩ =ᵒ ⟨y, p⟩ := elimᵒ !reflᵒ x p in
+    is_contr.mk ⟨x, reflᵒ x⟩ (λt, match t with ⟨y, p⟩ := l y p end)
 end singleton
 
 section fib_equivalences
   variables {X Y : Type}(f : X → Y)[is_fibrant X][is_fibrant Y]
 
-  definition fibre [reducible] (y : Y) := Σ (x : X), f x ~ y
+  definition fibre [reducible] (y : Y) := Σ (x : X), f x =ᵒ y
   definition is_fib_equiv [reducible] [class] := Π (y : Y), is_contr (fibre f y)
 
   definition fib_equiv [reducible] (X Y : Type)[is_fibrant X][is_fibrant Y] : Type :=
@@ -269,28 +277,28 @@ section fib_equivalences
 
   notation X `≃` Y := fib_equiv X Y
 
-  definition coerce {X Y : Fib} : X ~ Y → X → Y := elim id Y
-  definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X ~ Y) : is_fib_equiv (coerce p) :=
+  definition coerce {X Y : Fib} : X =ᵒ Y → X → Y := elimᵒ id Y
+  definition coerce_is_fib_equiv [instance] {X Y : Fib}(p : X =ᵒ Y) : is_fib_equiv (coerce p) :=
     begin
-      induction p using elim,
-      unfold coerce, rewrite elim_β,
+      induction p using elimo,
+      unfold coerce, rewrite elimo_β,
       apply id_is_fib_equiv
     end
 
-  definition coerce_fib_equiv {X Y : Fib}(p : X ~ Y) : X ≃ Y := ⟨ coerce p, _ ⟩
+  definition coerce_fib_equiv {X Y : Fib}(p : X =ᵒ Y) : X ≃ Y := ⟨ coerce p, _ ⟩
 
 end fib_equivalences
 
 
 definition Univalence := Π {X Y : Fib}, is_fib_equiv (@coerce_fib_equiv X Y)
 
-
+-- (strict) fibre
 definition fibreₛ [reducible] {X Y : Type} (f : X → Y) (y : Y) := Σ (x : X), f x = y
 
 open sigma.ops
 
 definition fibre_projection {X : Type}{Y : X → Type}(x : X)
-  : fibreₛ (λ (p : Σ (x : X), Y x), p.1) x ≃ₛ Y x
+  : fibreₛ (λ (p : Σ (x : X), Y x), p.1) x ≃ Y x
   := begin
       unfold fibreₛ, esimp,
       refine (equiv.mk _ _ _ _),
@@ -303,9 +311,9 @@ definition fibre_projection {X : Type}{Y : X → Type}(x : X)
      end
 
 -- ref:def:fibration
--- Definition 3.2
-definition is_fibration.{u} {E B : Type.{max 1 u}} (p : E → B) :=
-  Σ (F : B → Fib.{u}), Π (b : B), F b ≃ₛ fibreₛ p b
-
-definition is_fibration_alt [reducible] {E B : Type} (p : E → B) :=
+-- Definition 3.7
+definition is_fibration [reducible] {E B : Type} (p : E → B) :=
   Π (b : B), is_fibrant (fibreₛ p b)
+
+definition is_fibration_alt.{u} {E B : Type.{max 1 u}} (p : E → B) :=
+  Σ (F : B → Fib.{u}), Π (b : B), F b ≃ fibreₛ p b

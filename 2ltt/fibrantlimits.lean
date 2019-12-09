@@ -16,10 +16,10 @@ namespace fiblimits
   open sum nat fin function
 
   -- ref:thm:fibrant-limits
-  -- Theorem 3.13
+  -- Theorem 4.8
   definition fibrant_limit.{v}
     [invC : invcat C] [finC : is_obj_finite C]
-    (X : C ⇒ Uₛ) (rfib : is_reedy_fibrant X) :
+    (X : C ⇒ U) (rfib : is_reedy_fibrant X) :
     is_fibrant (limit_obj (limit_in_pretype X)) :=
 
     begin
@@ -46,7 +46,7 @@ namespace fiblimits
         apply equiv.symm nat_unit_sigma_equiv,
 
         let q := matching_obj_map X z,
-        have fibration_q : (is_fibration_alt q), from rfib z,
+        have fibration_q : (is_fibration q), from rfib z,
 
         let p := map_L_to_Mz_alt z X,
         apply equiv_is_fibrant, apply equiv.symm,

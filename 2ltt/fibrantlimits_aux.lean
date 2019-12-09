@@ -46,7 +46,7 @@ end
 
 open invcat
 
-definition Functor_from_C'_eq (X : C ⇒ Uₛ) (z : C) (x' : C_without_z z) :
+definition Functor_from_C'_eq (X : C ⇒ U) (z : C) (x' : C_without_z z) :
   X (@obj _ _ x') = (object (Functor_from_C' z X) x') :=
   begin esimp end
 
@@ -65,7 +65,7 @@ definition Functor_from_C'_eq (X : C ⇒ Uₛ) (z : C) (x' : C_without_z z) :
     apply (reflecting_id f ⟨rfl,rfl⟩).2
   end
 
-definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Uₛ) [invC : invcat C]
+definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ U) [invC : invcat C]
   {φ : C ⇒ ℕop} {max_rank : ∀ x, φ x ≤ φ z} {reflecting_id : id_reflect φ}
   [rfibX : is_reedy_fibrant X] [finC : is_obj_finite C]
   : is_reedy_fibrant (Functor_from_C' z X)  :=
@@ -73,7 +73,7 @@ definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Uₛ) [invC : invcat
       let C' := C_without_z z,
       let X' := Functor_from_C' z X,
       unfold is_reedy_fibrant at *,
-      unfold is_fibration_alt at *,
+      unfold is_fibration at *,
       intros x b,
       let Hequiv := (@MO_equiv C z x φ reflecting_id max_rank _ _ X),
       let MO := @to_fun _ _ Hequiv b,
@@ -109,7 +109,7 @@ definition Functor_from_C'_reedy_fibrant (z : C) (X : C ⇒ Uₛ) [invC : invcat
     end
 
 -- map from limit of X restricted to C'
-definition map_L_to_Mz (z : C) (X : C ⇒ Uₛ) [invC : invcat C]
+definition map_L_to_Mz (z : C) (X : C ⇒ U) [invC : invcat C]
   (L : cone_with_tip (Functor_from_C' z X) poly_unit) : matching_object X z :=
     by cases L with [η, NatSq]; refine natural_transformation.mk
       (λ a u, η (mk (to a) (reduced_coslice_ne z a)) poly_unit.star)
@@ -117,13 +117,13 @@ definition map_L_to_Mz (z : C) (X : C ⇒ Uₛ) [invC : invcat C]
 
 
 -- explicit representation of the limit of X restricted to category C without z
-definition lim_restricted [reducible] (X : C ⇒ Uₛ) (z : C) [invC : invcat C]
+definition lim_restricted [reducible] (X : C ⇒ U) (z : C) [invC : invcat C]
 := Σ (c : Π y, (Functor_from_C' z X) y),
       Π (y y' : C_without_z z) (f : @hom (subcat_obj C _) _ y y'),
         ((Functor_from_C' z X) f) (c y) = c y'
 
 -- map from the limit of X restricted to C' where we use explicit representation of limit L
-definition map_L_to_Mz_alt (z : C) (X : C ⇒ Uₛ.{u}) [invC : invcat C]
+definition map_L_to_Mz_alt (z : C) (X : C ⇒ U.{u}) [invC : invcat C]
 (L : lim_restricted X z) : matching_object X z :=
   match L with
   | ⟨η, NatSq⟩ :=
@@ -144,7 +144,7 @@ begin
   esimp, induction p22 using eq.drec, congruence
 end
 
-definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ Uₛ.{u}) (z : C) :
+definition two_piece_limit_pullback_p_q_equiv [invC : invcat C] (X : C ⇒ U.{u}) (z : C) :
 (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
 (Π (y : C_without_z z) (f : z ⟶ obj y ), X f c_z = c y) ×
 (Π (y y' : C_without_z z) (f : @hom (subcat_obj _ _) _ y y'), (Functor_from_C' z X) f (c y) = c y'))
@@ -177,7 +177,7 @@ begin
 end
 
 definition lim_two_pieces_eq
-{ X : C ⇒ Uₛ}
+{ X : C ⇒ U}
 { z : C }
 { c_z : X z}
 { c : Π y, X (obj y) }
@@ -191,7 +191,7 @@ definition limit_two_piece_limit_equiv [invC : invcat C] {n' : ℕ}
   {φ : C ⇒ ℕop}
   (reflecting_id : id_reflect φ)
   (max_rank : Πy, φ y ≤ φ z)
-  (X : C ⇒ Uₛ.{u}) :
+  (X : C ⇒ U.{u}) :
   (Σ (c : Π y, X y), Π y y' f, morphism X f (c y) = c y')
     ≃ₛ
   (Σ (c_z : X z) (c : (Π y : C_without_z z, X y)),
@@ -236,10 +236,10 @@ definition limit_two_piece_limit_equiv [invC : invcat C] {n' : ℕ}
             }
          end
 
-definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration_alt p]:
+definition fibration_domain_is_fibrant {E : Type} {B : Fib} (p : E → B) [isfibr_p : is_fibration p]:
   is_fibrant E := @equiv_is_fibrant (Σ b x, p x = b) _ singleton_contr_fiberₛ _
 
-definition fincat_0_limit_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ Uₛ) : Nat(𝟙,X) ≃ₛ poly_unit :=
+definition fincat_0_limit_unit_equiv [φ : C ≃ₛ fin 0 ] (X : C ⇒ U) : Nat(𝟙,X) ≃ₛ poly_unit :=
   begin
   cases φ with [f,g,l,r],
   refine equiv.mk (λ x, star) _ _ _,

@@ -17,7 +17,7 @@ section MO_facts
               {φ : C ⇒ ℕop} {reflecting_id : id_reflect φ}
               {max_rank : ∀ x, φ x ≤ φ z}
               [is_obj_finite C] [invcat C]
-              (X : C ⇒ Uₛ)
+              (X : C ⇒ U)
 
     definition red_coslice_to_C' (o : x//C_without_z z) : (obj x)//C :=
     begin
